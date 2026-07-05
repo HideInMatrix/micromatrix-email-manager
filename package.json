@@ -1,0 +1,26 @@
+{
+  "name": "micromatrix-email-manager",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --host 127.0.0.1",
+    "build": "nuxt build",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "postinstall": "prisma generate",
+    "preview": "nuxt preview --host 127.0.0.1",
+    "prepare": "nuxt prepare"
+  },
+  "dependencies": {
+    "@prisma/adapter-better-sqlite3": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "lucide-vue-next": "latest",
+    "nuxt": "^4.4.8",
+    "prisma": "^7.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "latest"
+  },
+  "packageManager": "pnpm@11.7.0"
+}

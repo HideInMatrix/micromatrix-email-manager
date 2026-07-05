@@ -1,0 +1,20 @@
+services:
+  micromatrix-email-manager:
+    image: ${MICROMATRIX_EMAIL_MANAGER_IMAGE:-micromatrix-email-manager:local}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      DATABASE_URL: file:/data/micromatrix-email-manager.sqlite
+      SITE_URL: ${SITE_URL:-http://localhost:3000}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?Set ADMIN_EMAIL in .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY:?Set TOKEN_ENCRYPTION_KEY in .env}
+    volumes:
+      - micromatrix-email-manager-data:/data
+
+volumes:
+  micromatrix-email-manager-data:

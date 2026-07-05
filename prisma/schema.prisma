@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model MailAccount {
+  id               String        @id
+  provider         String
+  email            String
+  name             String
+  picture          String?
+  scopeJson        String        @default("[]")
+  tokenCipher      String
+  status           String
+  providerDataJson String        @default("{}")
+  lastSyncAt       DateTime?
+  lastError        String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  messages         MailMessage[]
+
+  @@unique([provider, email])
+  @@index([provider])
+  @@index([status])
+}
+
+model MailMessage {
+  accountId       String
+  messageId       String
+  provider        String
+  threadId        String
+  subject         String
+  fromAddress     String
+  toAddress       String
+  date            String
+  snippet         String
+  labelsJson      String   @default("[]")
+  unread          Boolean  @default(false)
+  internalDate    BigInt
+  bodyText        String?
+  bodyHtml        String?
+  attachmentsJson String   @default("[]")
+  ruleMatchesJson String   @default("[]")
+  receivedAt      DateTime
+  updatedAt       DateTime @updatedAt
+  account         MailAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@id([accountId, messageId])
+  @@index([provider])
+  @@index([unread])
+  @@index([internalDate])
+}
+
+model AutomationRule {
+  id            String    @id
+  name          String
+  enabled       Boolean   @default(true)
+  matchJson     String    @default("{}")
+  actionJson    String    @default("{}")
+  matchCount    Int       @default(0)
+  lastMatchedAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model OAuthState {
+  id        String   @id
+  provider  String
+  createdAt DateTime @default(now())
+
+  @@index([provider])
+  @@index([createdAt])
+}
+
+model ProviderConfig {
+  provider           String   @id
+  clientId           String   @default("")
+  clientSecretCipher String   @default("")
+  pubsubTopic        String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model AppEvent {
+  id        String   @id
+  type      String
+  message   String
+  accountId String?
+  createdAt DateTime @default(now())
+
+  @@index([type])
+  @@index([accountId])
+  @@index([createdAt])
+}
