@@ -39,7 +39,7 @@ docker compose up --build -d
 
 `docker-compose.yml` exposes the app on `APP_PORT` or `3000` by default and stores the
 SQLite database in the `micromatrix-email-manager-data` volume. The container runs
-`prisma db push --skip-generate` before starting, so a new volume is initialized
+`prisma db push` before starting, so a new volume is initialized
 automatically.
 
 For a published image:
