@@ -1,0 +1,22 @@
+services:
+  micromatrix-email-manager:
+    image: ghcr.io/hideinmatrix/micromatrix-email-manager:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    env_file:
+      - .env
+    volumes:
+      - micromatrix-email-manager-data:/data
+    networks:
+      - 1panel-network
+
+volumes:
+  micromatrix-email-manager-data:
+
+networks:
+  1panel-network:
+    external: true

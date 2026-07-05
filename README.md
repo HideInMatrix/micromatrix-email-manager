@@ -37,7 +37,7 @@ cp .env.example .env
 docker compose up --build -d
 ```
 
-`compose.yaml` exposes the app on `APP_PORT` or `3000` by default and stores the
+`docker-compose.yml` exposes the app on `APP_PORT` or `3000` by default and stores the
 SQLite database in the `micromatrix-email-manager-data` volume. The container runs
 `prisma db push --skip-generate` before starting, so a new volume is initialized
 automatically.
