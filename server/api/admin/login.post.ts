@@ -15,15 +15,16 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readAdminCredentials(event)
+  const identity = validateAdminCredentials(event, body.email, body.password)
 
-  if (!validateAdminCredentials(event, body.email, body.password)) {
+  if (!identity) {
     throw createError({
       statusCode: 401,
-      statusMessage: 'Invalid admin credentials'
+      statusMessage: 'Invalid credentials'
     })
   }
 
-  setAdminSessionCookie(event)
+  setAdminSessionCookie(event, identity)
 
-  return { ok: true }
+  return { ok: true, email: identity.email, isAdmin: identity.isAdmin }
 })

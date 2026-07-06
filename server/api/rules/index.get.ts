@@ -1,7 +1,9 @@
 import { defineEventHandler } from 'h3'
+import { requireUserAccess } from '../../utils/access'
 import { readState } from '../../utils/storage'
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
+  const access = requireUserAccess(event)
   const state = await readState()
-  return state.rules
+  return access.isAdmin ? state.rules : []
 })

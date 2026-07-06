@@ -6,11 +6,18 @@ import { addEvent, readState, upsertMessage, writeState } from './storage'
 
 export async function syncAccounts(
   event: H3Event,
-  options: { accountId?: string; limit?: number; query?: string } = {}
+  options: {
+    accountId?: string
+    accountIds?: string[]
+    limit?: number
+    query?: string
+  } = {}
 ) {
   const state = await readState()
   const accounts = options.accountId
     ? state.accounts.filter((account) => account.id === options.accountId)
+    : options.accountIds
+      ? state.accounts.filter((account) => options.accountIds?.includes(account.id))
     : state.accounts
   const summaries: SyncSummary[] = []
 

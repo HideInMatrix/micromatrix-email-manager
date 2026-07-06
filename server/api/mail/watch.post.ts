@@ -1,13 +1,19 @@
 import { createError, defineEventHandler, readBody } from 'h3'
+import {
+  filterAccountsForUser,
+  requireUserAccess
+} from '../../utils/access'
 import { getProviderForAccount } from '../../utils/providers'
 import { addEvent, readState, writeState } from '../../utils/storage'
 
 export default defineEventHandler(async (event) => {
+  const access = requireUserAccess(event)
   const body = await readBody<{ accountId?: string }>(event)
   const state = await readState()
+  const accessibleAccounts = filterAccountsForUser(access, state.accounts)
   const accounts = body.accountId
-    ? state.accounts.filter((account) => account.id === body.accountId)
-    : state.accounts
+    ? accessibleAccounts.filter((account) => account.id === body.accountId)
+    : accessibleAccounts
 
   if (!accounts.length) {
     throw createError({ statusCode: 404, statusMessage: 'No account selected' })

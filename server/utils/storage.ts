@@ -46,6 +46,7 @@ export async function readState(): Promise<AppState> {
     ...defaultState(),
     accounts: accounts.map((account) => ({
       id: account.id,
+      ownerEmail: account.ownerEmail || account.email,
       provider: account.provider as MailProviderId,
       email: account.email,
       name: account.name,
@@ -125,10 +126,29 @@ export async function writeState(state: AppState) {
     await tx.mailMessage.deleteMany()
     await tx.mailAccount.deleteMany()
 
+    const ownerEmails = [
+      ...new Set(
+        state.accounts
+          .map((account) => account.ownerEmail || account.email)
+          .filter(Boolean)
+      )
+    ]
+
+    for (const ownerEmail of ownerEmails) {
+      await tx.appUser.upsert({
+        where: { email: ownerEmail },
+        update: {},
+        create: {
+          email: ownerEmail
+        }
+      })
+    }
+
     if (state.accounts.length) {
       await tx.mailAccount.createMany({
         data: state.accounts.map((account) => ({
           id: account.id,
+          ownerEmail: account.ownerEmail || account.email,
           provider: account.provider,
           email: account.email,
           name: account.name,

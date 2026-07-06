@@ -14,6 +14,7 @@ export default defineNuxtConfig({
     siteUrl: '',
     adminEmail: '',
     adminPassword: '',
+    userCredentials: '',
     tokenEncryptionKey: '',
     public: {
       appName: 'micromatrix-email-manager'

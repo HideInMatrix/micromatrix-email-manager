@@ -2,6 +2,9 @@
 import type { MailMessage } from '../../shared/types'
 
 const manager = useMailboxManager()
+const session = ref<{
+  isAdmin: boolean
+}>()
 
 const {
   status,
@@ -22,6 +25,7 @@ const {
   syncNow,
   trashMessage
 } = manager
+const dashboardHref = computed(() => session.value?.isAdmin ? '/dashboard' : undefined)
 
 useHead({
   title: '邮箱工作台 · micromatrix-email-manager'
@@ -32,6 +36,9 @@ definePageMeta({
 })
 
 async function refreshWorkspace() {
+  session.value = await $fetch<{
+    isAdmin: boolean
+  }>('/api/admin/session')
   selectedAccountId.value = ''
   await refreshAll({ selectFirstAccount: false })
 }
@@ -57,7 +64,7 @@ async function confirmTrashMessage(message: MailMessage) {
     :status="status"
     :providers="providers"
     :busy="busy"
-    dashboard-href="/dashboard"
+    :dashboard-href="dashboardHref"
     :show-connect="false"
     :show-drawer-button="false"
     @refresh="refreshWorkspace"

@@ -53,6 +53,7 @@ export default defineEventHandler(async (event) => {
 
   const account = {
     id: existing?.id || `${provider.id}:${profile.id}`,
+    ownerEmail: existing?.ownerEmail || profile.email,
     provider: provider.id,
     email: profile.email,
     name: profile.name,

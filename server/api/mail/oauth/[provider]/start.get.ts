@@ -1,10 +1,12 @@
 import { createError, defineEventHandler, getRouterParam } from 'h3'
+import { requireAdmin } from '../../../../utils/admin-auth'
 import { getProvider } from '../../../../utils/providers'
 import { createOAuthStateRecord } from '../../../../utils/google'
 import { readState, writeState } from '../../../../utils/storage'
 import type { MailProviderId } from '../../../../../shared/types'
 
 export default defineEventHandler(async (event) => {
+  requireAdmin(event)
   const provider = getProvider(getRouterParam(event, 'provider'))
 
   if (!provider.buildOAuthUrl) {

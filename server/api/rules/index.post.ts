@@ -1,10 +1,12 @@
 import { randomUUID } from 'node:crypto'
 import { createError, defineEventHandler, readBody } from 'h3'
 import type { AutomationRule } from '../../../shared/types'
+import { requireAdmin } from '../../utils/admin-auth'
 import { assertProviderId } from '../../utils/provider-configs'
 import { addEvent, readState, writeState } from '../../utils/storage'
 
 export default defineEventHandler(async (event) => {
+  requireAdmin(event)
   const body = await readBody<Partial<AutomationRule>>(event)
 
   if (!body.name?.trim()) {

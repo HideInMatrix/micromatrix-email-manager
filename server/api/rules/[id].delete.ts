@@ -1,7 +1,9 @@
 import { createError, defineEventHandler, getRouterParam } from 'h3'
+import { requireAdmin } from '../../utils/admin-auth'
 import { addEvent, readState, writeState } from '../../utils/storage'
 
 export default defineEventHandler(async (event) => {
+  requireAdmin(event)
   const id = getRouterParam(event, 'id')
   const state = await readState()
   const rule = state.rules.find((item) => item.id === id)

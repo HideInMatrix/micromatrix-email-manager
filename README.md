@@ -29,6 +29,7 @@ pnpm dev
 NUXT_SITE_URL=http://127.0.0.1:3000
 NUXT_ADMIN_EMAIL=admin@example.com
 NUXT_ADMIN_PASSWORD=replace-with-a-strong-admin-password
+NUXT_USER_CREDENTIALS=
 NUXT_TOKEN_ENCRYPTION_KEY=replace-with-at-least-32-random-characters
 ```
 
@@ -38,10 +39,13 @@ NUXT_TOKEN_ENCRYPTION_KEY=replace-with-at-least-32-random-characters
 NUXT_SITE_URL=https://sms.matrixfrp.gq
 NUXT_ADMIN_EMAIL=your-admin@example.com
 NUXT_ADMIN_PASSWORD=replace-with-a-strong-admin-password
+NUXT_USER_CREDENTIALS=user1@example.com:user-password,user2@example.com:user-password
 NUXT_TOKEN_ENCRYPTION_KEY=replace-with-at-least-32-random-characters
 ```
 
 `NUXT_TOKEN_ENCRYPTION_KEY` 建议使用 32 位以上随机字符串。修改后，已保存的 OAuth Token 可能无法解密，所以生产环境上线后不要随意更换。
+
+`NUXT_ADMIN_EMAIL` 登录后可以查看和管理所有邮箱账号及邮件。`NUXT_USER_CREDENTIALS` 是可选的普通用户登录列表，格式为 `email:password,email2:password2`；普通用户只能查看归属到自己邮箱地址的账号和邮件。新连接的邮箱账号会默认把邮箱地址写入 `ownerEmail`，用于和普通用户建立关系。
 
 ## Docker 与 1Panel
 
@@ -54,7 +58,7 @@ docker compose up --build -d
 
 1Panel / Docker 部署时注意：
 
-- `.env` 中使用 `NUXT_SITE_URL`、`NUXT_ADMIN_EMAIL`、`NUXT_ADMIN_PASSWORD`、`NUXT_TOKEN_ENCRYPTION_KEY`。
+- `.env` 中使用 `NUXT_SITE_URL`、`NUXT_ADMIN_EMAIL`、`NUXT_ADMIN_PASSWORD`、`NUXT_USER_CREDENTIALS`、`NUXT_TOKEN_ENCRYPTION_KEY`。
 - 不要用本地的 `DATABASE_URL=file:./.data/...` 覆盖容器数据库路径。
 - `docker-compose.yml` 已强制容器内数据库为 `file:/data/micromatrix-email-manager.sqlite`。
 - 如确实需要覆盖容器数据库路径，请设置 `DOCKER_DATABASE_URL`，不要设置 `DATABASE_URL`。

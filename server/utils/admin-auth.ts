@@ -17,10 +17,16 @@ interface AdminTokenPayload {
   expiresAt: number
 }
 
+export interface AuthIdentity {
+  email: string
+  isAdmin: boolean
+}
+
 export interface AdminSession {
   configured: boolean
   authenticated: boolean
   email?: string
+  isAdmin: boolean
 }
 
 export function getAdminRuntimeConfig(event: H3Event) {
@@ -29,6 +35,7 @@ export function getAdminRuntimeConfig(event: H3Event) {
   return {
     email: config.adminEmail as string,
     password: config.adminPassword as string,
+    userCredentials: config.userCredentials as string,
     secret: (config.tokenEncryptionKey as string) || (config.adminPassword as string)
   }
 }
@@ -43,20 +50,21 @@ export function getAdminSession(event: H3Event): AdminSession {
   const token = getCookie(event, adminCookieName)
 
   if (!configured || !token) {
-    return { configured, authenticated: false }
+    return { configured, authenticated: false, isAdmin: false }
   }
 
   const payload = verifyToken(event, token)
   const config = getAdminRuntimeConfig(event)
 
-  if (!payload || payload.email !== config.email || payload.expiresAt < Date.now()) {
-    return { configured, authenticated: false }
+  if (!payload || payload.expiresAt < Date.now()) {
+    return { configured, authenticated: false, isAdmin: false }
   }
 
   return {
     configured,
     authenticated: true,
-    email: payload.email
+    email: payload.email,
+    isAdmin: sameEmail(payload.email, config.email)
   }
 }
 
@@ -77,6 +85,13 @@ export function requireAdmin(event: H3Event) {
     })
   }
 
+  if (!session.isAdmin) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Admin access required'
+    })
+  }
+
   return session
 }
 
@@ -90,14 +105,34 @@ export function validateAdminCredentials(
   password?: string
 ) {
   const config = getAdminRuntimeConfig(event)
+  const inputEmail = (email || '').trim()
+  const inputPassword = password || ''
 
-  return safeEqual(email || '', config.email) && safeEqual(password || '', config.password)
+  if (
+    sameEmail(inputEmail, config.email) &&
+    safeEqual(inputPassword, config.password)
+  ) {
+    return {
+      email: config.email,
+      isAdmin: true
+    } satisfies AuthIdentity
+  }
+
+  for (const user of parseUserCredentials(config.userCredentials)) {
+    if (sameEmail(inputEmail, user.email) && safeEqual(inputPassword, user.password)) {
+      return {
+        email: user.email,
+        isAdmin: false
+      } satisfies AuthIdentity
+    }
+  }
+
+  return undefined
 }
 
-export function setAdminSessionCookie(event: H3Event) {
-  const config = getAdminRuntimeConfig(event)
+export function setAdminSessionCookie(event: H3Event, identity: AuthIdentity) {
   const payload: AdminTokenPayload = {
-    email: config.email,
+    email: identity.email,
     expiresAt: Date.now() + sessionTtlMs
   }
 
@@ -146,6 +181,56 @@ function signature(event: H3Event, value: string) {
   return createHmac('sha256', secret || 'micromatrix-email-manager-admin-dev-secret')
     .update(value)
     .digest('base64url')
+}
+
+function sameEmail(left?: string, right?: string) {
+  return normalizeEmail(left) === normalizeEmail(right)
+}
+
+function normalizeEmail(value?: string) {
+  return (value || '').trim().toLowerCase()
+}
+
+function parseUserCredentials(raw?: string) {
+  const value = raw?.trim()
+
+  if (!value) {
+    return []
+  }
+
+  if (value.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(value) as Array<{
+        email?: string
+        password?: string
+      }>
+
+      return parsed
+        .map((user) => ({
+          email: user.email?.trim() || '',
+          password: user.password || ''
+        }))
+        .filter((user) => user.email && user.password)
+    } catch {
+      return []
+    }
+  }
+
+  return value
+    .split(/[\n,;]/)
+    .map((item) => {
+      const separatorIndex = item.indexOf(':')
+
+      if (separatorIndex < 0) {
+        return { email: '', password: '' }
+      }
+
+      return {
+        email: item.slice(0, separatorIndex).trim(),
+        password: item.slice(separatorIndex + 1)
+      }
+    })
+    .filter((user) => user.email && user.password)
 }
 
 function safeEqual(left: string, right: string) {

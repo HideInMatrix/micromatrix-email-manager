@@ -40,6 +40,7 @@ export interface PublicMailProviderConfig {
 
 export interface MailAccount {
   id: string
+  ownerEmail?: string
   provider: MailProviderId
   email: string
   name: string

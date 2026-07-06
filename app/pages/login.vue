@@ -10,7 +10,7 @@ const error = ref('')
 const configured = ref(true)
 
 useHead({
-  title: '管理员登录 · micromatrix-email-manager'
+  title: '登录 · micromatrix-email-manager'
 })
 
 definePageMeta({
@@ -21,11 +21,12 @@ onMounted(async () => {
   const session = await $fetch<{
     configured: boolean
     authenticated: boolean
+    isAdmin: boolean
   }>('/api/admin/session')
   configured.value = session.configured
 
   if (session.authenticated) {
-    await navigateTo(safeRedirect())
+    await navigateTo(safeRedirect(defaultRedirect(session.isAdmin)))
   }
 })
 
@@ -34,14 +35,16 @@ async function login() {
   error.value = ''
 
   try {
-    await $fetch('/api/admin/login', {
+    const session = await $fetch<{
+      isAdmin: boolean
+    }>('/api/admin/login', {
       method: 'POST',
       body: {
         email: email.value,
         password: password.value
       }
     })
-    await navigateTo(safeRedirect())
+    await navigateTo(safeRedirect(defaultRedirect(session.isAdmin)))
   } catch (caught) {
     error.value = caught instanceof Error ? caught.message : '登录失败'
   } finally {
@@ -49,11 +52,15 @@ async function login() {
   }
 }
 
-function safeRedirect() {
+function defaultRedirect(isAdmin: boolean) {
+  return isAdmin ? '/dashboard' : '/'
+}
+
+function safeRedirect(fallback = '/') {
   const redirect = route.query.redirect
   return typeof redirect === 'string' && redirect.startsWith('/')
     ? redirect
-    : '/dashboard'
+    : fallback
 }
 </script>
 
@@ -67,7 +74,7 @@ function safeRedirect() {
 
         <div>
           <span class="block text-xs font-bold uppercase text-base-content/60">micromatrix-email-manager</span>
-          <h1 class="mt-1 text-3xl font-light leading-tight">管理员登录</h1>
+          <h1 class="mt-1 text-3xl font-light leading-tight">登录</h1>
         </div>
 
         <StatusAlert

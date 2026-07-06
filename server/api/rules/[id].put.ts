@@ -1,9 +1,11 @@
 import { createError, defineEventHandler, getRouterParam, readBody } from 'h3'
 import type { AutomationRule } from '../../../shared/types'
+import { requireAdmin } from '../../utils/admin-auth'
 import { assertProviderId } from '../../utils/provider-configs'
 import { addEvent, readState, writeState } from '../../utils/storage'
 
 export default defineEventHandler(async (event) => {
+  requireAdmin(event)
   const id = getRouterParam(event, 'id')
   const body = await readBody<Partial<AutomationRule>>(event)
   const state = await readState()

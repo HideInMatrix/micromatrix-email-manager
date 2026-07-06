@@ -1,5 +1,8 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (!to.path.startsWith('/dashboard')) {
+  const isDashboard = to.path.startsWith('/dashboard')
+  const isMailboxHome = to.path === '/'
+
+  if (!isDashboard && !isMailboxHome) {
     return
   }
 
@@ -7,9 +10,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const session = await $fetch<{
     configured: boolean
     authenticated: boolean
+    isAdmin: boolean
   }>('/api/admin/session', { headers }).catch(() => ({
     configured: false,
-    authenticated: false
+    authenticated: false,
+    isAdmin: false
   }))
 
   if (!session.configured || !session.authenticated) {
@@ -19,5 +24,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
         redirect: to.fullPath
       }
     })
+  }
+
+  if (isDashboard && !session.isAdmin) {
+    return navigateTo('/')
   }
 })

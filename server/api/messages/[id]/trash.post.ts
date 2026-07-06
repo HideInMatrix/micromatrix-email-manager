@@ -1,8 +1,10 @@
 import { createError, defineEventHandler, getRouterParam, readBody } from 'h3'
+import { assertCanAccessAccount, requireUserAccess } from '../../../utils/access'
 import { getProviderForAccount } from '../../../utils/providers'
 import { addEvent, readState, writeState } from '../../../utils/storage'
 
 export default defineEventHandler(async (event) => {
+  const access = requireUserAccess(event)
   const id = getRouterParam(event, 'id')
   const body = await readBody<{ accountId?: string }>(event)
   const accountId = body.accountId?.trim()
@@ -19,12 +21,7 @@ export default defineEventHandler(async (event) => {
   const message = state.messages[messageIndex]
   const account = state.accounts.find((item) => item.id === message.accountId)
 
-  if (!account) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Message account not found'
-    })
-  }
+  assertCanAccessAccount(access, account)
 
   const provider = getProviderForAccount(account.provider)
 

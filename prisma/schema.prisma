@@ -6,8 +6,18 @@ datasource db {
   provider = "sqlite"
 }
 
+model AppUser {
+  email     String        @id
+  name      String?
+  role      String        @default("user")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  accounts  MailAccount[]
+}
+
 model MailAccount {
   id               String        @id
+  ownerEmail       String?
   provider         String
   email            String
   name             String
@@ -20,9 +30,11 @@ model MailAccount {
   lastError        String?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
+  owner            AppUser?      @relation(fields: [ownerEmail], references: [email], onDelete: SetNull)
   messages         MailMessage[]
 
   @@unique([provider, email])
+  @@index([ownerEmail])
   @@index([provider])
   @@index([status])
 }
