@@ -9,16 +9,23 @@ const {
   accounts,
   providerConfigs,
   rules,
+  users,
+  apiTokens,
+  createdApiToken,
   busy,
   error,
   notice,
   refreshAll,
   loadProviderConfigs,
+  loadUsers,
+  loadApiTokens,
   syncNow,
   saveProviderConfig,
   saveRule,
   toggleRule,
-  deleteRule
+  deleteRule,
+  createApiToken,
+  revokeApiToken
 } = manager
 
 useHead({
@@ -30,7 +37,12 @@ definePageMeta({
 })
 
 async function refreshConfigPage() {
-  await Promise.all([refreshAll(), loadProviderConfigs()])
+  await Promise.all([
+    refreshAll(),
+    loadProviderConfigs(),
+    loadUsers(),
+    loadApiTokens()
+  ])
 }
 
 onMounted(refreshConfigPage)
@@ -91,6 +103,16 @@ onMounted(refreshConfigPage)
       @save="saveRule"
       @toggle="toggleRule"
       @delete="deleteRule"
+    />
+
+    <ApiTokenPanel
+      class="xl:col-span-2"
+      :users="users"
+      :api-tokens="apiTokens"
+      :created-api-token="createdApiToken"
+      :busy="busy"
+      @create="createApiToken"
+      @revoke="revokeApiToken"
     />
   </BitsRevealPanel>
 </template>

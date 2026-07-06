@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readAdminCredentials(event)
-  const identity = validateAdminCredentials(event, body.email, body.password)
+  const identity = await validateAdminCredentials(event, body.email, body.password)
 
   if (!identity) {
     throw createError({

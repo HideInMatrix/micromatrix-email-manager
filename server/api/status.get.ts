@@ -11,7 +11,7 @@ import { listProviders } from '../utils/providers'
 import { readState } from '../utils/storage'
 
 export default defineEventHandler(async (event) => {
-  const access = requireUserAccess(event)
+  const access = await requireUserAccess(event)
   const config = useRuntimeConfig(event)
   const state = await readState()
   const accounts = filterAccountsForUser(access, state.accounts)

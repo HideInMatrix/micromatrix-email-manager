@@ -7,7 +7,7 @@ import { getProviderForAccount } from '../../utils/providers'
 import { addEvent, readState, writeState } from '../../utils/storage'
 
 export default defineEventHandler(async (event) => {
-  const access = requireUserAccess(event)
+  const access = await requireUserAccess(event)
   const body = await readBody<{ accountId?: string }>(event)
   const state = await readState()
   const accessibleAccounts = filterAccountsForUser(access, state.accounts)

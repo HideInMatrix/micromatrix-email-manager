@@ -24,7 +24,8 @@ const {
   refreshAll,
   loadMessages,
   syncNow,
-  trashMessage
+  trashMessage,
+  trashMessages
 } = manager
 const dashboardHref = computed(() => session.value?.isAdmin ? '/dashboard' : undefined)
 
@@ -56,6 +57,18 @@ async function confirmTrashMessage(message: MailMessage) {
   }
 
   await trashMessage(message)
+}
+
+async function confirmTrashMessages(messages: MailMessage[]) {
+  if (!messages.length) {
+    return
+  }
+
+  if (!window.confirm(`将选中的 ${messages.length} 封邮件移入垃圾箱？`)) {
+    return
+  }
+
+  await trashMessages(messages)
 }
 </script>
 
@@ -94,7 +107,9 @@ async function confirmTrashMessage(message: MailMessage) {
       :messages="messages"
       :accounts="accounts"
       :status="status"
+      :busy="busy"
       selected-account-email="全部账号"
+      @trash-selected="confirmTrashMessages"
     />
 
     <MessageDetailPanel

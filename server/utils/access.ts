@@ -1,13 +1,19 @@
 import { createError, type H3Event } from 'h3'
 import type { AppEvent, MailAccount, MailMessage } from '../../shared/types'
-import { getAdminSession } from './admin-auth'
+import { getAdminSession, getApiTokenIdentity } from './admin-auth'
 
 export interface UserAccess {
   email: string
   isAdmin: boolean
 }
 
-export function requireUserAccess(event: H3Event): UserAccess {
+export async function requireUserAccess(event: H3Event): Promise<UserAccess> {
+  const apiIdentity = await getApiTokenIdentity(event)
+
+  if (apiIdentity) {
+    return apiIdentity
+  }
+
   const session = getAdminSession(event)
 
   if (!session.configured) {

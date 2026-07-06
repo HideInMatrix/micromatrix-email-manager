@@ -7,12 +7,34 @@ datasource db {
 }
 
 model AppUser {
-  email     String        @id
-  name      String?
-  role      String        @default("user")
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  accounts  MailAccount[]
+  email         String        @id
+  name          String?
+  passwordHash  String?
+  role          String        @default("user")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  accounts      MailAccount[]
+  apiTokens     ApiToken[]    @relation("ApiTokenUser")
+  createdTokens ApiToken[]    @relation("ApiTokenCreator")
+}
+
+model ApiToken {
+  id             String    @id
+  name           String    @default("")
+  tokenHash      String    @unique
+  tokenPrefix    String
+  userEmail      String
+  createdByEmail String
+  lastUsedAt     DateTime?
+  revokedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           AppUser   @relation("ApiTokenUser", fields: [userEmail], references: [email], onDelete: Cascade)
+  createdBy      AppUser   @relation("ApiTokenCreator", fields: [createdByEmail], references: [email], onDelete: Cascade)
+
+  @@index([userEmail])
+  @@index([createdByEmail])
+  @@index([revokedAt])
 }
 
 model MailAccount {

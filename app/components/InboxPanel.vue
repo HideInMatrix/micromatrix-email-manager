@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Inbox, Search, Tag } from 'lucide-vue-next'
+import { Inbox, Search, Tag, Trash2 } from 'lucide-vue-next'
 import type { AppStatus, MailMessage, PublicMailAccount } from '../../shared/types'
 import { formatDate } from '../utils/format'
 
@@ -12,6 +12,7 @@ const props = defineProps<{
   search: string
   unreadOnly: boolean
   ruleMatchedOnly: boolean
+  busy?: string
 }>()
 
 const emit = defineEmits<{
@@ -19,6 +20,7 @@ const emit = defineEmits<{
   'update:search': [value: string]
   'update:unreadOnly': [value: boolean]
   'update:ruleMatchedOnly': [value: boolean]
+  'trash-selected': [messages: MailMessage[]]
 }>()
 
 const searchModel = computed({
@@ -49,6 +51,48 @@ const ruleMatchedMessageCount = computed(() =>
   props.messages.filter((message) => message.ruleMatches.length).length
 )
 
+const selectedMessageKeys = ref<string[]>([])
+
+const visibleMessageKeys = computed(() => props.messages.map(messageKey))
+
+const selectedMessageKeySet = computed(() => new Set(selectedMessageKeys.value))
+
+const selectedMessages = computed(() =>
+  props.messages.filter((message) => selectedMessageKeySet.value.has(messageKey(message)))
+)
+
+const selectedCount = computed(() => selectedMessages.value.length)
+
+const allVisibleSelected = computed({
+  get: () =>
+    props.messages.length > 0 &&
+      props.messages.every((message) => selectedMessageKeySet.value.has(messageKey(message))),
+  set: (selected: boolean) => {
+    if (selected) {
+      selectedMessageKeys.value = Array.from(
+        new Set([...selectedMessageKeys.value, ...visibleMessageKeys.value])
+      )
+      return
+    }
+
+    const visibleKeys = new Set(visibleMessageKeys.value)
+    selectedMessageKeys.value = selectedMessageKeys.value.filter(
+      (key) => !visibleKeys.has(key)
+    )
+  }
+})
+
+const hasPartiallySelected = computed(() =>
+  selectedCount.value > 0 && selectedCount.value < props.messages.length
+)
+
+watch(visibleMessageKeys, (keys) => {
+  const visibleKeys = new Set(keys)
+  selectedMessageKeys.value = selectedMessageKeys.value.filter((key) =>
+    visibleKeys.has(key)
+  )
+})
+
 function resetStatusFilters() {
   unreadModel.value = false
   ruleMatchedModel.value = false
@@ -60,6 +104,39 @@ function toggleRuleMatchedFilter() {
 
 function accountName(accountId: string) {
   return props.accounts.find((account) => account.id === accountId)?.email || accountId
+}
+
+function messageKey(message: MailMessage) {
+  return `${message.accountId}:${message.id}`
+}
+
+function isMessageSelected(message: MailMessage) {
+  return selectedMessageKeySet.value.has(messageKey(message))
+}
+
+function setMessageSelected(message: MailMessage, selected: boolean) {
+  const key = messageKey(message)
+
+  if (selected) {
+    selectedMessageKeys.value = Array.from(new Set([...selectedMessageKeys.value, key]))
+    return
+  }
+
+  selectedMessageKeys.value = selectedMessageKeys.value.filter(
+    (selectedKey) => selectedKey !== key
+  )
+}
+
+function eventChecked(event: Event) {
+  return event.target instanceof HTMLInputElement && event.target.checked
+}
+
+function trashSelectedMessages() {
+  if (!selectedMessages.value.length) {
+    return
+  }
+
+  emit('trash-selected', selectedMessages.value)
 }
 </script>
 
@@ -75,6 +152,19 @@ function accountName(accountId: string) {
           <p class="mt-1 text-sm text-base-content/60">{{ selectedAccountEmail || '全部账号' }}</p>
         </div>
         <div class="flex flex-wrap items-center justify-end gap-2">
+          <button
+            v-if="selectedCount"
+            class="btn btn-sm btn-error max-sm:btn-square"
+            type="button"
+            title="批量删除"
+            :disabled="busy === 'trash-batch'"
+            @click="trashSelectedMessages"
+          >
+            <span v-if="busy === 'trash-batch'" class="loading loading-spinner loading-xs" />
+            <Trash2 v-else :size="15" />
+            <span class="max-sm:hidden">删除 {{ selectedCount }}</span>
+          </button>
+
           <div class="join">
             <button
               class="btn btn-sm join-item"
@@ -112,6 +202,16 @@ function accountName(accountId: string) {
         <table class="table table-pin-rows table-zebra">
           <thead>
             <tr>
+              <th class="w-10">
+                <input
+                  v-model="allVisibleSelected"
+                  class="checkbox checkbox-sm"
+                  type="checkbox"
+                  aria-label="选择当前邮件"
+                  :disabled="!messages.length || busy === 'trash-batch'"
+                  :indeterminate="hasPartiallySelected"
+                >
+              </th>
               <th>主题</th>
               <th>发件人</th>
               <th>标签</th>
@@ -123,9 +223,22 @@ function accountName(accountId: string) {
               v-for="message in messages"
               :key="`${message.accountId}:${message.id}`"
               class="cursor-pointer"
-              :class="message.id === selectedMessageId ? 'bg-primary/10' : ''"
+              :class="{
+                'bg-primary/10': message.id === selectedMessageId,
+                'bg-base-300/60': isMessageSelected(message) && message.id !== selectedMessageId
+              }"
               @click="emit('update:selectedMessageId', message.id)"
             >
+              <td @click.stop>
+                <input
+                  class="checkbox checkbox-sm"
+                  type="checkbox"
+                  :aria-label="`选择 ${message.subject}`"
+                  :checked="isMessageSelected(message)"
+                  :disabled="busy === 'trash-batch'"
+                  @change="setMessageSelected(message, eventChecked($event))"
+                >
+              </td>
               <td class="max-w-0">
                 <div class="flex min-w-0 items-start gap-2">
                   <span v-if="message.unread" class="status status-primary mt-1.5" />

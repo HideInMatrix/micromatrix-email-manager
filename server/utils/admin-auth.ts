@@ -2,12 +2,15 @@ import {
   createError,
   deleteCookie,
   getCookie,
+  getHeader,
   readBody,
   setCookie,
   type H3Event
 } from 'h3'
 import { useRuntimeConfig } from '#imports'
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import { prisma } from './prisma'
+import { hashApiToken, verifyPassword } from './password'
 
 const adminCookieName = 'mail_admin'
 const sessionTtlMs = 7 * 24 * 60 * 60 * 1000
@@ -95,17 +98,49 @@ export function requireAdmin(event: H3Event) {
   return session
 }
 
+export async function getApiTokenIdentity(event: H3Event): Promise<AuthIdentity | undefined> {
+  const token = readBearerToken(event)
+
+  if (!token) {
+    return undefined
+  }
+
+  const config = getAdminRuntimeConfig(event)
+  const apiToken = await prisma.apiToken.findUnique({
+    where: {
+      tokenHash: hashApiToken(token)
+    },
+    include: {
+      user: true
+    }
+  })
+
+  if (!apiToken || apiToken.revokedAt) {
+    return undefined
+  }
+
+  await prisma.apiToken.update({
+    where: { id: apiToken.id },
+    data: { lastUsedAt: new Date() }
+  })
+
+  return {
+    email: apiToken.userEmail,
+    isAdmin: apiToken.user.role === 'admin' || sameEmail(apiToken.userEmail, config.email)
+  }
+}
+
 export async function readAdminCredentials(event: H3Event) {
   return await readBody<{ email?: string; password?: string }>(event)
 }
 
-export function validateAdminCredentials(
+export async function validateAdminCredentials(
   event: H3Event,
   email?: string,
   password?: string
-) {
+): Promise<AuthIdentity | undefined> {
   const config = getAdminRuntimeConfig(event)
-  const inputEmail = (email || '').trim()
+  const inputEmail = normalizeEmail(email)
   const inputPassword = password || ''
 
   if (
@@ -115,7 +150,18 @@ export function validateAdminCredentials(
     return {
       email: config.email,
       isAdmin: true
-    } satisfies AuthIdentity
+    }
+  }
+
+  const dbUser = await prisma.appUser.findUnique({
+    where: { email: inputEmail }
+  })
+
+  if (dbUser?.passwordHash && verifyPassword(inputPassword, dbUser.passwordHash)) {
+    return {
+      email: dbUser.email,
+      isAdmin: dbUser.role === 'admin' || sameEmail(dbUser.email, config.email)
+    }
   }
 
   for (const user of parseUserCredentials(config.userCredentials)) {
@@ -123,7 +169,7 @@ export function validateAdminCredentials(
       return {
         email: user.email,
         isAdmin: false
-      } satisfies AuthIdentity
+      }
     }
   }
 
@@ -231,6 +277,17 @@ function parseUserCredentials(raw?: string) {
       }
     })
     .filter((user) => user.email && user.password)
+}
+
+function readBearerToken(event: H3Event) {
+  const authorization = getHeader(event, 'authorization') || ''
+  const [scheme, ...parts] = authorization.split(/\s+/)
+
+  if (scheme?.toLowerCase() !== 'bearer') {
+    return undefined
+  }
+
+  return parts.join(' ').trim() || undefined
 }
 
 function safeEqual(left: string, right: string) {

@@ -6,7 +6,7 @@ import {
 import { readState } from '../../utils/storage'
 
 export default defineEventHandler(async (event) => {
-  const access = requireUserAccess(event)
+  const access = await requireUserAccess(event)
   const id = getRouterParam(event, 'id')
   const state = await readState()
   const message = filterMessagesForUser(access, state.accounts, state.messages)

@@ -59,6 +59,32 @@ export interface PublicMailAccount extends Omit<MailAccount, 'tokenCipher'> {
   hasToken: boolean
 }
 
+export interface PublicAppUser {
+  email: string
+  name?: string
+  role: string
+  hasPassword: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PublicApiToken {
+  id: string
+  name?: string
+  tokenPrefix: string
+  userEmail: string
+  createdByEmail: string
+  lastUsedAt?: string
+  revokedAt?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreatedApiToken {
+  token: string
+  apiToken: PublicApiToken
+}
+
 export interface StoredOAuthToken {
   access_token?: string
   refresh_token?: string

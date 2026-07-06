@@ -47,6 +47,52 @@ NUXT_TOKEN_ENCRYPTION_KEY=replace-with-at-least-32-random-characters
 
 `NUXT_ADMIN_EMAIL` 登录后可以查看和管理所有邮箱账号及邮件。`NUXT_USER_CREDENTIALS` 是可选的普通用户登录列表，格式为 `email:password,email2:password2`；普通用户只能查看归属到自己邮箱地址的账号和邮件。新连接的邮箱账号会默认把邮箱地址写入 `ownerEmail`，用于和普通用户建立关系。
 
+API Token 在后台 `/dashboard/config` 的 `API Token` 面板中生成，并记录到数据库。生成时需要选择归属用户账号，Token 权限跟随该用户：管理员账号可以访问全部邮箱邮件，普通用户只能访问归属到自己邮箱地址的账号和邮件。完整 Token 只会在生成后显示一次，数据库只保存哈希。
+
+公开合规页面：
+
+- 隐私权政策：`https://your-domain.example/privacy`
+- 服务条款：`https://your-domain.example/terms`
+
+配置 Google OAuth、Outlook OAuth 或其他邮箱服务商应用审核资料时，可以把上面的域名替换为你的 `NUXT_SITE_URL`。
+
+## 第三方 API
+
+第三方程序可以通过 `Authorization: Bearer <token>` 调用邮件接口。以下示例中的 `<API_TOKEN>` 来自后台 `/dashboard/config` 生成的 API Token。
+
+获取邮件列表：
+
+```bash
+curl "https://your-domain.example/api/messages?limit=50&offset=0" \
+  -H "Authorization: Bearer <API_TOKEN>"
+```
+
+支持的查询参数：
+
+- `accountId`：只获取指定邮箱账号的邮件。
+- `recipientEmail`：只获取邮件头 `To` 中包含指定收件邮箱的邮件，也可使用别名 `to`。
+- `q`：按主题、发件人、收件人、摘要搜索。
+- `unread=true`：只获取未读邮件。
+- `matched=true`：只获取命中规则的邮件。
+- `limit`：返回数量，范围 `1-500`，默认 `200`。
+- `offset`：分页偏移量，默认 `0`。
+
+获取单封邮件：
+
+```bash
+curl "https://your-domain.example/api/messages/<messageId>" \
+  -H "Authorization: Bearer <API_TOKEN>"
+```
+
+批量删除邮件会调用 Gmail trash，并从本地缓存移除：
+
+```bash
+curl -X POST "https://your-domain.example/api/messages/trash" \
+  -H "Authorization: Bearer <API_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"id":"message-id-1","accountId":"account-id-1"},{"id":"message-id-2","accountId":"account-id-1"}]}'
+```
+
 ## Docker 与 1Panel
 
 ```bash

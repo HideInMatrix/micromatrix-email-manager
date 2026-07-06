@@ -4,7 +4,7 @@ import { getProviderForAccount } from '../../../utils/providers'
 import { addEvent, readState, writeState } from '../../../utils/storage'
 
 export default defineEventHandler(async (event) => {
-  const access = requireUserAccess(event)
+  const access = await requireUserAccess(event)
   const id = getRouterParam(event, 'id')
   const body = await readBody<{ accountId?: string }>(event)
   const accountId = body.accountId?.trim()

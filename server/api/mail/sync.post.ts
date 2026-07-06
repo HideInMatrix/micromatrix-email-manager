@@ -7,7 +7,7 @@ import { syncAccounts } from '../../utils/sync'
 import { readState } from '../../utils/storage'
 
 export default defineEventHandler(async (event) => {
-  const access = requireUserAccess(event)
+  const access = await requireUserAccess(event)
   const body = await readBody<{
     accountId?: string
     limit?: number

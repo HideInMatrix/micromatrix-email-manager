@@ -3,7 +3,7 @@ import { requireUserAccess } from '../../utils/access'
 import { readState } from '../../utils/storage'
 
 export default defineEventHandler(async (event) => {
-  const access = requireUserAccess(event)
+  const access = await requireUserAccess(event)
   const state = await readState()
   return access.isAdmin ? state.rules : []
 })

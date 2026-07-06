@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { LockKeyhole, LogIn } from 'lucide-vue-next'
+import { LockKeyhole, LogIn, UserPlus } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
 
 const email = ref('')
 const password = ref('')
+const passwordConfirm = ref('')
 const busy = ref(false)
 const error = ref('')
 const configured = ref(true)
+const mode = ref<'login' | 'register'>('login')
 
 useHead({
   title: '登录 · micromatrix-email-manager'
@@ -31,18 +33,19 @@ onMounted(async () => {
   }
 })
 
-async function login() {
+async function submitAuth() {
   busy.value = true
   error.value = ''
 
   try {
     const session = await $fetch<{
       isAdmin: boolean
-    }>('/api/admin/login', {
+    }>(mode.value === 'login' ? '/api/admin/login' : '/api/admin/register', {
       method: 'POST',
       body: {
         email: email.value,
-        password: password.value
+        password: password.value,
+        passwordConfirm: passwordConfirm.value
       }
     })
     await redirectAfterLogin(session.isAdmin)
@@ -51,6 +54,13 @@ async function login() {
   } finally {
     busy.value = false
   }
+}
+
+function switchMode(nextMode: 'login' | 'register') {
+  mode.value = nextMode
+  error.value = ''
+  password.value = ''
+  passwordConfirm.value = ''
 }
 
 function defaultRedirect(isAdmin: boolean) {
@@ -80,7 +90,7 @@ async function redirectAfterLogin(isAdmin: boolean) {
 
 <template>
   <main class="flex min-h-screen w-[100vw] max-w-full items-center justify-center overflow-x-hidden bg-base-200 p-4">
-    <form class="card w-full max-w-[24rem] bg-base-100 shadow-sm" @submit.prevent="login">
+    <form class="card w-full max-w-[24rem] bg-base-100 shadow-sm" @submit.prevent="submitAuth">
       <div class="card-body gap-4">
         <span class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-content">
           <LockKeyhole :size="22" />
@@ -88,7 +98,26 @@ async function redirectAfterLogin(isAdmin: boolean) {
 
         <div>
           <span class="block text-xs font-bold uppercase text-base-content/60">micromatrix-email-manager</span>
-          <h1 class="mt-1 text-3xl font-light leading-tight">登录</h1>
+          <h1 class="mt-1 text-3xl font-light leading-tight">{{ mode === 'login' ? '登录' : '注册' }}</h1>
+        </div>
+
+        <div class="join w-full">
+          <button
+            class="btn join-item flex-1"
+            :class="mode === 'login' ? 'btn-primary' : 'btn-ghost'"
+            type="button"
+            @click="switchMode('login')"
+          >
+            登录
+          </button>
+          <button
+            class="btn join-item flex-1"
+            :class="mode === 'register' ? 'btn-primary' : 'btn-ghost'"
+            type="button"
+            @click="switchMode('register')"
+          >
+            注册
+          </button>
         </div>
 
         <StatusAlert
@@ -115,7 +144,17 @@ async function redirectAfterLogin(isAdmin: boolean) {
             v-model="password"
             class="input input-bordered min-w-0 w-full"
             type="password"
-            autocomplete="current-password"
+            :autocomplete="mode === 'login' ? 'current-password' : 'new-password'"
+          >
+        </fieldset>
+
+        <fieldset v-if="mode === 'register'" class="fieldset p-0">
+          <legend class="fieldset-legend">确认密码</legend>
+          <input
+            v-model="passwordConfirm"
+            class="input input-bordered min-w-0 w-full"
+            type="password"
+            autocomplete="new-password"
           >
         </fieldset>
 
@@ -125,9 +164,15 @@ async function redirectAfterLogin(isAdmin: boolean) {
           :disabled="busy || !configured"
         >
           <span v-if="busy" class="loading loading-spinner loading-xs" />
-          <LogIn v-else :size="16" />
-          登录
+          <LogIn v-else-if="mode === 'login'" :size="16" />
+          <UserPlus v-else :size="16" />
+          {{ mode === 'login' ? '登录' : '注册' }}
         </button>
+
+        <div class="flex justify-center gap-3 text-xs text-base-content/60">
+          <NuxtLink class="link link-hover" to="/privacy">隐私权政策</NuxtLink>
+          <NuxtLink class="link link-hover" to="/terms">服务条款</NuxtLink>
+        </div>
       </div>
     </form>
   </main>
