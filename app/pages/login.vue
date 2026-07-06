@@ -13,6 +13,10 @@ useHead({
   title: '管理员登录 · micromatrix-email-manager'
 })
 
+definePageMeta({
+  layout: false
+})
+
 onMounted(async () => {
   const session = await $fetch<{
     configured: boolean
@@ -54,52 +58,56 @@ function safeRedirect() {
 </script>
 
 <template>
-  <main class="login-page">
-    <form class="login-panel" @submit.prevent="login">
-      <span class="login-mark">
-        <LockKeyhole :size="22" />
-      </span>
+  <main class="flex min-h-screen w-[100vw] max-w-full items-center justify-center overflow-x-hidden bg-base-200 p-4">
+    <form class="card w-full max-w-[24rem] bg-base-100 shadow-sm" @submit.prevent="login">
+      <div class="card-body gap-4">
+        <span class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-content">
+          <LockKeyhole :size="22" />
+        </span>
 
-      <div>
-        <span class="eyebrow">micromatrix-email-manager</span>
-        <h1>管理员登录</h1>
-      </div>
+        <div>
+          <span class="block text-xs font-bold uppercase text-base-content/60">micromatrix-email-manager</span>
+          <h1 class="mt-1 text-3xl font-light leading-tight">管理员登录</h1>
+        </div>
 
-      <StatusAlert
-        v-if="!configured"
-        type="error"
-        message="请先在 .env 配置 NUXT_ADMIN_EMAIL 和 NUXT_ADMIN_PASSWORD"
-        @close="configured = true"
-      />
-      <StatusAlert
-        v-if="error"
-        type="error"
-        :message="error"
-        @close="error = ''"
-      />
+        <StatusAlert
+          v-if="!configured"
+          type="error"
+          message="请先在 .env 配置 NUXT_ADMIN_EMAIL 和 NUXT_ADMIN_PASSWORD"
+          @close="configured = true"
+        />
+        <StatusAlert
+          v-if="error"
+          type="error"
+          :message="error"
+          @close="error = ''"
+        />
 
-      <label class="login-field">
-        <span>邮箱</span>
-        <input v-model="email" type="email" autocomplete="username">
-      </label>
+        <fieldset class="fieldset p-0">
+          <legend class="fieldset-legend">邮箱</legend>
+          <input v-model="email" class="input input-bordered min-w-0 w-full" type="email" autocomplete="username">
+        </fieldset>
 
-      <label class="login-field">
-        <span>密码</span>
-        <input
-          v-model="password"
-          type="password"
-          autocomplete="current-password"
+        <fieldset class="fieldset p-0">
+          <legend class="fieldset-legend">密码</legend>
+          <input
+            v-model="password"
+            class="input input-bordered min-w-0 w-full"
+            type="password"
+            autocomplete="current-password"
+          >
+        </fieldset>
+
+        <button
+          class="btn btn-primary w-full"
+          type="submit"
+          :disabled="busy || !configured"
         >
-      </label>
-
-      <button
-        class="button primary login-submit"
-        type="submit"
-        :disabled="busy || !configured"
-      >
-        <LogIn :size="16" />
-        登录
-      </button>
+          <span v-if="busy" class="loading loading-spinner loading-xs" />
+          <LogIn v-else :size="16" />
+          登录
+        </button>
+      </div>
     </form>
   </main>
 </template>

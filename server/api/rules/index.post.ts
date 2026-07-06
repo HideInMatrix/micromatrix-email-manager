@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { createError, defineEventHandler, readBody } from 'h3'
 import type { AutomationRule } from '../../../shared/types'
+import { assertProviderId } from '../../utils/provider-configs'
 import { addEvent, readState, writeState } from '../../utils/storage'
 
 export default defineEventHandler(async (event) => {
@@ -10,9 +11,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Rule name is required' })
   }
 
+  const provider = body.provider || 'gmail'
+  assertProviderId(provider)
+
   const now = new Date().toISOString()
   const rule: AutomationRule = {
     id: randomUUID(),
+    provider,
     name: body.name.trim(),
     enabled: body.enabled ?? true,
     match: {
@@ -35,7 +40,7 @@ export default defineEventHandler(async (event) => {
   state.rules.unshift(rule)
   addEvent(state, {
     type: 'rule',
-    message: `${rule.name} created`
+    message: `${rule.provider}: ${rule.name} created`
   })
   await writeState(state)
 

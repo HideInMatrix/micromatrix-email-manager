@@ -84,6 +84,7 @@ export async function readState(): Promise<AppState> {
     })),
     rules: rules.map((rule) => ({
       id: rule.id,
+      provider: (rule.provider || 'gmail') as MailProviderId,
       name: rule.name,
       enabled: rule.enabled,
       match: parseJson<AutomationRule['match']>(rule.matchJson, {}),
@@ -173,6 +174,7 @@ export async function writeState(state: AppState) {
       await tx.automationRule.createMany({
         data: state.rules.map((rule) => ({
           id: rule.id,
+          provider: rule.provider || 'gmail',
           name: rule.name,
           enabled: rule.enabled,
           matchJson: JSON.stringify(rule.match || {}),

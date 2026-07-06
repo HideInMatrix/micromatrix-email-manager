@@ -2,7 +2,7 @@ import type { AppState, AutomationRule, MailMessage } from '../../shared/types'
 
 export function applyRules(state: AppState, message: MailMessage) {
   for (const rule of state.rules) {
-    if (!rule.enabled || !matchesRule(rule, message)) {
+    if (!rule.enabled || rule.provider !== message.provider || !matchesRule(rule, message)) {
       continue
     }
 

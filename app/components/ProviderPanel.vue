@@ -2,7 +2,7 @@
 import {
   AlertTriangle,
   CheckCircle2,
-  Plug,
+  KeyRound,
   Radio,
   Save,
   Settings
@@ -22,7 +22,6 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  connect: [provider: MailProviderSummary]
   saveConfig: [
     payload: {
       provider: MailProviderId
@@ -33,6 +32,7 @@ const emit = defineEmits<{
   ]
 }>()
 
+const selectedProviderId = ref<MailProviderId>('gmail')
 const forms = reactive<
   Record<
     string,
@@ -44,11 +44,38 @@ const forms = reactive<
   >
 >({})
 
+const selectedProvider = computed(() =>
+  props.providers.find((provider) => provider.id === selectedProviderId.value)
+    || props.providers[0]
+)
+
+const savedProviderEntries = computed(() =>
+  props.providers
+    .map((provider) => ({
+      provider,
+      config: publicConfig(provider.id)
+    }))
+    .filter(({ config }) => hasSavedConfig(config))
+)
+
+watch(
+  () => props.providers,
+  (providers) => {
+    if (
+      providers.length &&
+      !providers.some((provider) => provider.id === selectedProviderId.value)
+    ) {
+      selectedProviderId.value = providers[0].id
+    }
+  },
+  { immediate: true }
+)
+
 watch(
   () => [props.providers, props.providerConfigs] as const,
   () => {
     for (const provider of props.providers) {
-      const config = props.providerConfigs.find((item) => item.provider === provider.id)
+      const config = publicConfig(provider.id)
       forms[provider.id] = {
         clientId: config?.clientId || '',
         clientSecret: '',
@@ -63,7 +90,22 @@ function publicConfig(providerId: MailProviderId) {
   return props.providerConfigs.find((item) => item.provider === providerId)
 }
 
-function saveProviderConfig(provider: MailProviderSummary) {
+function hasSavedConfig(config?: PublicMailProviderConfig) {
+  return Boolean(
+    config?.updatedAt ||
+      config?.clientId ||
+      config?.clientSecretSet ||
+      config?.pubsubTopic
+  )
+}
+
+function saveSelectedProviderConfig() {
+  const provider = selectedProvider.value
+
+  if (!provider) {
+    return
+  }
+
   const form = forms[provider.id]
 
   emit('saveConfig', {
@@ -73,113 +115,179 @@ function saveProviderConfig(provider: MailProviderSummary) {
     pubsubTopic: form.pubsubTopic
   })
 }
+
+function capabilityClass(active: boolean) {
+  return active ? 'badge-primary' : 'badge-outline'
+}
 </script>
 
 <template>
-  <section class="panel">
-    <div class="panel-head">
-      <h2>配置</h2>
-      <Settings :size="17" />
-    </div>
-
-    <div class="provider-list">
-      <div v-for="provider in providers" :key="provider.id" class="provider-item">
-        <div class="provider-main">
-          <span class="provider-mark" :class="{ enabled: provider.enabled }">
-            {{ provider.name.slice(0, 1) }}
-          </span>
-          <span>
-            <strong>{{ provider.name }}</strong>
-            <small>{{ provider.description }}</small>
-          </span>
-          <span class="status-badge" :class="provider.configured ? 'connected' : 'error'">
-            {{ provider.configured ? '已配置' : '待配置' }}
-          </span>
+  <section class="card bg-base-200 shadow-sm">
+    <div class="card-body gap-5 p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h2 class="card-title">
+            <Settings :size="18" />
+            OAuth 配置
+          </h2>
+          <p class="mt-1 text-sm text-base-content/60">
+            先创建邮箱类型，再保存对应 OAuth Client。
+          </p>
         </div>
+      </div>
 
-        <div class="capability-row">
-          <span :class="{ active: provider.capabilities.oauth }">
-            <Plug :size="14" />
+      <ul class="steps steps-horizontal w-full">
+        <li class="step step-primary">选择邮箱类型</li>
+        <li class="step step-primary">填写 OAuth 配置</li>
+        <li class="step">账号页连接邮箱</li>
+      </ul>
+
+      <form
+        v-if="selectedProvider && forms[selectedProvider.id]"
+        class="grid gap-4 rounded-box border border-base-300 bg-base-100 p-4"
+        @submit.prevent="saveSelectedProviderConfig"
+      >
+        <fieldset class="fieldset p-0">
+          <legend class="fieldset-legend">邮箱类型</legend>
+          <select v-model="selectedProviderId" class="select select-bordered w-full">
+            <option
+              v-for="provider in providers"
+              :key="provider.id"
+              :value="provider.id"
+            >
+              {{ provider.name }}
+            </option>
+          </select>
+        </fieldset>
+
+        <div class="flex flex-wrap gap-2">
+          <span class="badge h-7 gap-1" :class="capabilityClass(selectedProvider.capabilities.oauth)">
+            <KeyRound :size="14" />
             OAuth
           </span>
-          <span :class="{ active: provider.capabilities.sync }">
+          <span class="badge h-7 gap-1" :class="capabilityClass(selectedProvider.capabilities.sync)">
             <CheckCircle2 :size="14" />
             Sync
           </span>
-          <span :class="{ active: provider.capabilities.watch }">
+          <span class="badge h-7 gap-1" :class="capabilityClass(selectedProvider.capabilities.watch)">
             <Radio :size="14" />
             Watch
           </span>
         </div>
 
-        <div class="redirect-uri">{{ provider.redirectUri }}</div>
+        <div class="rounded-box border border-dashed border-primary/30 bg-primary/5 p-3 font-mono text-xs text-primary break-all">
+          {{ selectedProvider.redirectUri }}
+        </div>
 
-        <form
-          v-if="forms[provider.id]"
-          class="provider-config-form"
-          @submit.prevent="saveProviderConfig(provider)"
+        <fieldset
+          v-for="field in selectedProvider.configFields"
+          :key="field.key"
+          class="fieldset p-0"
         >
-          <label
-            v-for="field in provider.configFields"
-            :key="field.key"
-            class="provider-config-field"
+          <legend class="fieldset-legend py-1">
+            {{ field.label }}
+            <small
+              v-if="field.secret && publicConfig(selectedProvider.id)?.clientSecretSet"
+              class="text-success"
+            >
+              已保存
+            </small>
+          </legend>
+          <input
+            v-if="field.key === 'clientId'"
+            v-model="forms[selectedProvider.id].clientId"
+            class="input input-bordered w-full"
+            type="text"
+            :placeholder="field.placeholder"
+            autocomplete="off"
           >
-            <span>
-              {{ field.label }}
-              <small v-if="field.secret && publicConfig(provider.id)?.clientSecretSet">
-                已保存
-              </small>
-            </span>
-            <input
-              v-if="field.key === 'clientId'"
-              v-model="forms[provider.id].clientId"
-              type="text"
-              :placeholder="field.placeholder"
-              autocomplete="off"
-            >
-            <input
-              v-else-if="field.key === 'clientSecret'"
-              v-model="forms[provider.id].clientSecret"
-              type="password"
-              :placeholder="field.placeholder"
-              autocomplete="new-password"
-            >
-            <input
-              v-else-if="field.key === 'pubsubTopic'"
-              v-model="forms[provider.id].pubsubTopic"
-              type="text"
-              :placeholder="field.placeholder"
-              autocomplete="off"
-            >
-          </label>
-
-          <button
-            class="button secondary provider-connect"
-            type="submit"
-            :disabled="busy === `provider-config-${provider.id}`"
+          <input
+            v-else-if="field.key === 'clientSecret'"
+            v-model="forms[selectedProvider.id].clientSecret"
+            class="input input-bordered w-full"
+            type="password"
+            :placeholder="field.placeholder"
+            autocomplete="new-password"
           >
-            <Save
-              :class="{ spin: busy === `provider-config-${provider.id}` }"
-              :size="15"
-            />
-            保存 {{ provider.name }} 配置
-          </button>
-        </form>
+          <input
+            v-else-if="field.key === 'pubsubTopic'"
+            v-model="forms[selectedProvider.id].pubsubTopic"
+            class="input input-bordered w-full"
+            type="text"
+            :placeholder="field.placeholder"
+            autocomplete="off"
+          >
+        </fieldset>
 
         <button
-          class="button secondary provider-connect"
-          type="button"
-          :disabled="!provider.enabled || !provider.configured || !provider.capabilities.oauth"
-          @click="emit('connect', provider)"
+          class="btn btn-primary w-full"
+          type="submit"
+          :disabled="busy === `provider-config-${selectedProvider.id}`"
         >
-          <Plug :size="15" />
-          连接 {{ provider.name }}
+          <span v-if="busy === `provider-config-${selectedProvider.id}`" class="loading loading-spinner loading-xs" />
+          <Save v-else :size="15" />
+          保存 {{ selectedProvider.name }} 配置
         </button>
+      </form>
+
+      <div class="divider my-0">已创建配置</div>
+
+      <div v-if="savedProviderEntries.length" class="grid gap-3">
+        <article
+          v-for="{ provider, config } in savedProviderEntries"
+          :key="provider.id"
+          class="rounded-box border border-base-300 bg-base-100 p-4"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
+              <h3 class="truncate font-semibold">{{ provider.name }}</h3>
+              <p class="mt-1 truncate text-sm text-base-content/60">{{ provider.description }}</p>
+            </div>
+            <span class="badge badge-sm" :class="provider.configured ? 'badge-success' : 'badge-warning'">
+              {{ provider.configured ? '可连接' : '未完成' }}
+            </span>
+          </div>
+
+          <div class="mt-3 overflow-x-auto">
+            <table class="table table-sm">
+              <tbody>
+                <tr>
+                  <td>Client ID</td>
+                  <td class="max-w-0 truncate font-mono">{{ config?.clientId || '未填写' }}</td>
+                </tr>
+                <tr>
+                  <td>Client Secret</td>
+                  <td>
+                    <span class="badge badge-sm" :class="config?.clientSecretSet ? 'badge-success' : 'badge-warning'">
+                      {{ config?.clientSecretSet ? '已保存' : '未保存' }}
+                    </span>
+                  </td>
+                </tr>
+                <tr v-if="provider.id === 'gmail'">
+                  <td>Pub/Sub Topic</td>
+                  <td class="max-w-0 truncate font-mono">{{ config?.pubsubTopic || '未配置' }}</td>
+                </tr>
+                <tr>
+                  <td>Redirect URI</td>
+                  <td class="max-w-0 truncate font-mono">{{ provider.redirectUri }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
       </div>
 
-      <div class="config-row encryption-row">
-        <span class="config-label">Token 加密</span>
-        <span class="config-value" :class="{ ok: status?.configured.encryption }">
+      <div v-else class="alert alert-info">
+        <KeyRound :size="18" />
+        <span>还没有创建 OAuth 配置，请先选择邮箱类型并保存。</span>
+      </div>
+
+      <div class="flex items-center justify-between gap-3 rounded-box border border-base-300 bg-base-100 p-3">
+        <span class="text-sm text-base-content/70">Token 加密</span>
+        <span
+          class="badge h-8 gap-1"
+          :class="status?.configured.encryption ? 'badge-success' : 'badge-warning'"
+        >
           <CheckCircle2 v-if="status?.configured.encryption" :size="15" />
           <AlertTriangle v-else :size="15" />
           {{ status?.configured.encryption ? '强密钥' : '开发密钥' }}

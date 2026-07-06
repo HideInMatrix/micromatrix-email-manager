@@ -14,39 +14,50 @@ useHead({
   title: '事件 · micromatrix-email-manager'
 })
 
+definePageMeta({
+  layout: 'dashboard'
+})
+
 onMounted(loadStatus)
 </script>
 
 <template>
-  <div class="app-shell">
-    <AppHeader
-      title="事件"
-      :status="status"
-      :providers="providers"
-      :busy="busy"
-      home-href="/"
-      :show-connect="false"
-      :show-sync="false"
-      @refresh="loadStatus"
-    />
+  <AppHeader
+    title="Dashboard"
+    :status="status"
+    :providers="providers"
+    :busy="busy"
+    :show-connect="false"
+    :show-sync="false"
+    @refresh="loadStatus"
+  />
 
-    <StatusAlert
-      v-if="error"
-      type="error"
-      :message="error"
-      @close="error = ''"
-    />
-    <StatusAlert
-      v-if="notice"
-      type="success"
-      :message="notice"
-      @close="notice = ''"
-    />
+  <header class="flex flex-col gap-3 sm:flex-row sm:items-end">
+    <div class="grow">
+      <div class="breadcrumbs text-sm">
+        <ul>
+          <li><NuxtLink to="/dashboard">Dashboard</NuxtLink></li>
+          <li><h2>Events</h2></li>
+        </ul>
+      </div>
+      <p class="text-sm text-base-content/60">查看 OAuth、同步、watch 和 webhook 运行记录。</p>
+    </div>
+  </header>
 
-    <DashboardNav />
+  <StatusAlert
+    v-if="error"
+    type="error"
+    :message="error"
+    @close="error = ''"
+  />
+  <StatusAlert
+    v-if="notice"
+    type="success"
+    :message="notice"
+    @close="notice = ''"
+  />
 
-    <main class="dashboard-main dashboard-single">
-      <EventsPanel class="dashboard-events-panel" :events="status?.events || []" />
-    </main>
-  </div>
+  <BitsRevealPanel as="main" class="grid min-w-0 gap-4">
+    <EventsPanel :events="status?.events || []" />
+  </BitsRevealPanel>
 </template>

@@ -1,3 +1,5 @@
+import tailwindcss from '@tailwindcss/vite'
+
 export default defineNuxtConfig({
   compatibilityDate: '2026-07-05',
   devtools: { enabled: true },
@@ -5,6 +7,9 @@ export default defineNuxtConfig({
     compatibilityVersion: 4
   },
   css: ['~/assets/css/main.css'],
+  vite: {
+    plugins: [tailwindcss()]
+  },
   runtimeConfig: {
     siteUrl: '',
     adminEmail: '',

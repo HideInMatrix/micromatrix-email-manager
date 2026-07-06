@@ -13,6 +13,7 @@ const {
   error,
   notice,
   refreshAll,
+  connectProvider,
   syncNow,
   startWatch,
   removeAccount
@@ -20,6 +21,10 @@ const {
 
 useHead({
   title: '账号 · micromatrix-email-manager'
+})
+
+definePageMeta({
+  layout: 'dashboard'
 })
 
 onMounted(async () => {
@@ -40,44 +45,51 @@ async function confirmRemoveAccount(account: PublicMailAccount) {
 </script>
 
 <template>
-  <div class="app-shell">
-    <AppHeader
-      title="账号"
-      :status="status"
+  <AppHeader
+    title="Dashboard"
+    :status="status"
+    :providers="providers"
+    :busy="busy"
+    :show-connect="false"
+    @refresh="refreshAll"
+    @sync="syncNow()"
+  />
+
+  <header class="flex flex-col gap-3 sm:flex-row sm:items-end">
+    <div class="grow">
+      <div class="breadcrumbs text-sm">
+        <ul>
+          <li><NuxtLink to="/dashboard">Dashboard</NuxtLink></li>
+          <li><h2>Accounts</h2></li>
+        </ul>
+      </div>
+      <p class="text-sm text-base-content/60">管理已授权邮箱，执行同步、监听和断开操作。</p>
+    </div>
+  </header>
+
+  <StatusAlert
+    v-if="error"
+    type="error"
+    :message="error"
+    @close="error = ''"
+  />
+  <StatusAlert
+    v-if="notice"
+    type="success"
+    :message="notice"
+    @close="notice = ''"
+  />
+
+  <BitsRevealPanel as="main" class="grid min-w-0 gap-4">
+    <AccountsPanel
+      v-model:selected-account-id="selectedAccountId"
+      :accounts="accounts"
       :providers="providers"
       :busy="busy"
-      home-href="/"
-      :show-connect="false"
-      @refresh="refreshAll"
-      @sync="syncNow()"
+      @connect="connectProvider($event.id)"
+      @sync="syncNow"
+      @watch="startWatch"
+      @remove="confirmRemoveAccount"
     />
-
-    <StatusAlert
-      v-if="error"
-      type="error"
-      :message="error"
-      @close="error = ''"
-    />
-    <StatusAlert
-      v-if="notice"
-      type="success"
-      :message="notice"
-      @close="notice = ''"
-    />
-
-    <DashboardNav />
-
-    <main class="dashboard-main dashboard-single">
-      <AccountsPanel
-        v-model:selected-account-id="selectedAccountId"
-        class="dashboard-panel"
-        :accounts="accounts"
-        :providers="providers"
-        :busy="busy"
-        @sync="syncNow"
-        @watch="startWatch"
-        @remove="confirmRemoveAccount"
-      />
-    </main>
-  </div>
+  </BitsRevealPanel>
 </template>

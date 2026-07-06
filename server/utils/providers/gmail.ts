@@ -16,6 +16,7 @@ import {
   getOAuthRedirectUri,
   gmailGetMessage,
   gmailListMessageIds,
+  gmailTrashMessage,
   gmailWatch,
   GMAIL_PROVIDER_ID,
   GMAIL_SCOPES,
@@ -132,7 +133,7 @@ export const gmailProvider: MailProvider = {
     if (!hasGmailAccessScope(account.scope)) {
       throw createError({
         statusCode: 401,
-        statusMessage: 'Gmail account needs reauthorization with read-only mail access'
+        statusMessage: 'Gmail account needs reauthorization with Gmail modify access'
       })
     }
 
@@ -160,7 +161,7 @@ export const gmailProvider: MailProvider = {
     if (!hasGmailAccessScope(account.scope)) {
       throw createError({
         statusCode: 401,
-        statusMessage: 'Gmail account needs reauthorization with read-only mail access'
+        statusMessage: 'Gmail account needs reauthorization with Gmail modify access'
       })
     }
 
@@ -185,6 +186,17 @@ export const gmailProvider: MailProvider = {
         watchExpiration: new Date(Number(watch.expiration)).toISOString()
       }
     }
+  },
+  async trashMessage(event: H3Event, account: MailAccount, message) {
+    if (!hasGmailModifyScope(account.scope)) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: 'Gmail account needs reauthorization with Gmail modify access'
+      })
+    }
+
+    const accessToken = await getAccessToken(event, account)
+    await gmailTrashMessage(accessToken, message.id)
   },
   parseWebhook(body: unknown): ProviderWebhookResult {
     const rawData = (body as PubSubPushBody).message?.data
@@ -212,6 +224,15 @@ function hasGmailAccessScope(scopes: string[]) {
   return scopes.some((scope) =>
     [
       'https://www.googleapis.com/auth/gmail.readonly',
+      'https://www.googleapis.com/auth/gmail.modify',
+      'https://mail.google.com/'
+    ].includes(scope)
+  )
+}
+
+function hasGmailModifyScope(scopes: string[]) {
+  return scopes.some((scope) =>
+    [
       'https://www.googleapis.com/auth/gmail.modify',
       'https://mail.google.com/'
     ].includes(scope)

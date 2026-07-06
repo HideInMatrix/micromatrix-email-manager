@@ -164,6 +164,7 @@ export function useMailboxManager() {
   }
 
   async function saveRule(payload: {
+    provider: MailProviderId
     name: string
     match: AutomationRule['match']
     action: AutomationRule['action']
@@ -172,6 +173,7 @@ export function useMailboxManager() {
       await $fetch('/api/rules', {
         method: 'POST',
         body: {
+          provider: payload.provider,
           name: payload.name,
           enabled: true,
           match: payload.match,
@@ -200,6 +202,19 @@ export function useMailboxManager() {
     await withBusy(`delete-rule-${rule.id}`, async () => {
       await $fetch(`/api/rules/${rule.id}`, { method: 'DELETE' })
       await Promise.all([loadRules(), loadMessages(), loadStatus()])
+    })
+  }
+
+  async function trashMessage(message: MailMessage) {
+    await withBusy(`trash-${message.accountId}-${message.id}`, async () => {
+      await $fetch(`/api/messages/${encodeURIComponent(message.id)}/trash`, {
+        method: 'POST',
+        body: {
+          accountId: message.accountId
+        }
+      })
+      notice.value = '邮件已移入垃圾箱'
+      await Promise.all([loadMessages(), loadStatus()])
     })
   }
 
@@ -254,6 +269,7 @@ export function useMailboxManager() {
     saveRule,
     toggleRule,
     deleteRule,
+    trashMessage,
     accountName
   }
 }

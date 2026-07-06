@@ -1,5 +1,6 @@
 import { createError, defineEventHandler, getRouterParam, readBody } from 'h3'
 import type { AutomationRule } from '../../../shared/types'
+import { assertProviderId } from '../../utils/provider-configs'
 import { addEvent, readState, writeState } from '../../utils/storage'
 
 export default defineEventHandler(async (event) => {
@@ -12,6 +13,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Rule not found' })
   }
 
+  const provider = body.provider || rule.provider
+  assertProviderId(provider)
+
+  rule.provider = provider
   rule.name = body.name?.trim() || rule.name
   rule.enabled = body.enabled ?? rule.enabled
   rule.match = {
@@ -28,7 +33,7 @@ export default defineEventHandler(async (event) => {
   rule.updatedAt = new Date().toISOString()
   addEvent(state, {
     type: 'rule',
-    message: `${rule.name} updated`
+    message: `${rule.provider}: ${rule.name} updated`
   })
   await writeState(state)
 

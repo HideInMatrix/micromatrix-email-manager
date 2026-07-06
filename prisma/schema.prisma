@@ -56,6 +56,7 @@ model MailMessage {
 
 model AutomationRule {
   id            String    @id
+  provider      String    @default("gmail")
   name          String
   enabled       Boolean   @default(true)
   matchJson     String    @default("{}")
@@ -64,6 +65,8 @@ model AutomationRule {
   lastMatchedAt DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  @@index([provider])
 }
 
 model OAuthState {

@@ -96,6 +96,7 @@ export interface MailMessage {
 
 export interface AutomationRule {
   id: string
+  provider: MailProviderId
   name: string
   enabled: boolean
   match: {
@@ -123,7 +124,7 @@ export interface OAuthState {
 
 export interface AppEvent {
   id: string
-  type: 'oauth' | 'sync' | 'watch' | 'webhook' | 'rule' | 'error'
+  type: 'oauth' | 'sync' | 'watch' | 'webhook' | 'rule' | 'message' | 'error'
   message: string
   accountId?: string
   createdAt: string

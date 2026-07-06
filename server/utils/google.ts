@@ -15,7 +15,7 @@ export const GMAIL_SCOPES = [
   'openid',
   'email',
   'profile',
-  'https://www.googleapis.com/auth/gmail.readonly'
+  'https://www.googleapis.com/auth/gmail.modify'
 ]
 
 export const GMAIL_PROVIDER_ID: MailProviderId = 'gmail'
@@ -254,6 +254,22 @@ export async function gmailGetMessage(accessToken: string, messageId: string) {
 
   if (!response.ok) {
     throw await googleApiError(response, 'Could not read Gmail message')
+  }
+
+  return (await response.json()) as GmailMessageRaw
+}
+
+export async function gmailTrashMessage(accessToken: string, messageId: string) {
+  const response = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}/trash`,
+    {
+      method: 'POST',
+      headers: { authorization: `Bearer ${accessToken}` }
+    }
+  )
+
+  if (!response.ok) {
+    throw await googleApiError(response, 'Could not move Gmail message to trash')
   }
 
   return (await response.json()) as GmailMessageRaw

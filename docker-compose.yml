@@ -9,6 +9,8 @@ services:
       - "${APP_PORT:-3000}:3000"
     env_file:
       - .env
+    environment:
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-file:/data/micromatrix-email-manager.sqlite}
     volumes:
       - micromatrix-email-manager-data:/data
     networks:

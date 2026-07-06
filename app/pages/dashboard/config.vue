@@ -12,7 +12,6 @@ const {
   refreshAll,
   loadProviderConfigs,
   syncNow,
-  connectProvider,
   saveProviderConfig,
   saveRule,
   toggleRule,
@@ -23,6 +22,10 @@ useHead({
   title: '配置 · micromatrix-email-manager'
 })
 
+definePageMeta({
+  layout: 'dashboard'
+})
+
 async function refreshConfigPage() {
   await Promise.all([refreshAll(), loadProviderConfigs()])
 }
@@ -31,51 +34,57 @@ onMounted(refreshConfigPage)
 </script>
 
 <template>
-  <div class="app-shell">
-    <AppHeader
-      title="配置"
-      :status="status"
+  <AppHeader
+    title="Dashboard"
+    :status="status"
+    :providers="providers"
+    :busy="busy"
+    :show-connect="false"
+    @refresh="refreshConfigPage"
+    @sync="syncNow()"
+  />
+
+  <header class="flex flex-col gap-3 sm:flex-row sm:items-end">
+    <div class="grow">
+      <div class="breadcrumbs text-sm">
+        <ul>
+          <li><NuxtLink to="/dashboard">Dashboard</NuxtLink></li>
+          <li><h2>Configuration</h2></li>
+        </ul>
+      </div>
+      <p class="text-sm text-base-content/60">配置 OAuth Client、Pub/Sub Topic 和本地自动化规则。</p>
+    </div>
+  </header>
+
+  <StatusAlert
+    v-if="error"
+    type="error"
+    :message="error"
+    @close="error = ''"
+  />
+  <StatusAlert
+    v-if="notice"
+    type="success"
+    :message="notice"
+    @close="notice = ''"
+  />
+
+  <BitsRevealPanel as="main" class="grid min-w-0 gap-4 xl:grid-cols-[minmax(320px,460px)_minmax(420px,1fr)]">
+    <ProviderPanel
       :providers="providers"
+      :provider-configs="providerConfigs"
+      :status="status"
       :busy="busy"
-      home-href="/"
-      :show-connect="false"
-      @refresh="refreshConfigPage"
-      @sync="syncNow()"
-      @connect="connectProvider($event.id)"
+      @save-config="saveProviderConfig"
     />
 
-    <StatusAlert
-      v-if="error"
-      type="error"
-      :message="error"
-      @close="error = ''"
+    <RulesPanel
+      :providers="providers"
+      :rules="rules"
+      :busy="busy"
+      @save="saveRule"
+      @toggle="toggleRule"
+      @delete="deleteRule"
     />
-    <StatusAlert
-      v-if="notice"
-      type="success"
-      :message="notice"
-      @close="notice = ''"
-    />
-
-    <DashboardNav />
-
-    <main class="dashboard-main dashboard-config">
-      <ProviderPanel
-        :providers="providers"
-        :provider-configs="providerConfigs"
-        :status="status"
-        :busy="busy"
-        @connect="connectProvider($event.id)"
-        @save-config="saveProviderConfig"
-      />
-
-      <RulesPanel
-        :rules="rules"
-        :busy="busy"
-        @save="saveRule"
-        @toggle="toggleRule"
-        @delete="deleteRule"
-      />
-    </main>
-  </div>
+  </BitsRevealPanel>
 </template>
