@@ -22,6 +22,52 @@ const isTrashing = computed(() =>
     ? props.busy === `trash-${message.value.accountId}-${message.value.id}`
     : false
 )
+
+const htmlBodyDocument = computed(() => {
+  if (!message.value?.bodyHtml) {
+    return ''
+  }
+
+  return `<!doctype html>
+<html>
+<head>
+  <base target="_blank">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root { color-scheme: light; }
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 16px;
+      color: #1f2937;
+      background: #fff;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+    img, table, pre, blockquote {
+      max-width: 100%;
+    }
+    img {
+      height: auto;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    a {
+      color: #2563eb;
+    }
+  </style>
+</head>
+<body>${message.value.bodyHtml}</body>
+</html>`
+})
+
+const plainBody = computed(() =>
+  message.value?.bodyText || message.value?.snippet || ''
+)
 </script>
 
 <template>
@@ -33,7 +79,7 @@ const isTrashing = computed(() =>
             <Inbox :size="18" />
             详情
           </h2>
-        <p v-if="message" class="mt-1 text-sm text-base-content/60">邮件操作</p>
+          <p v-if="message" class="mt-1 text-sm text-base-content/60">邮件操作</p>
         </div>
         <button
           v-if="message && canTrash"
@@ -93,7 +139,19 @@ const isTrashing = computed(() =>
             </span>
           </div>
 
-          <pre class="max-h-[22.5rem] overflow-auto whitespace-pre-wrap break-words rounded-box bg-base-100 p-3 font-mono text-sm leading-7 text-base-content/80">{{ message.bodyText || message.snippet }}</pre>
+          <div class="overflow-hidden rounded-box bg-base-100">
+            <iframe
+              v-if="htmlBodyDocument"
+              class="h-[32rem] w-full bg-white"
+              title="邮件正文"
+              sandbox="allow-popups allow-popups-to-escape-sandbox"
+              :srcdoc="htmlBodyDocument"
+            />
+            <pre
+              v-else
+              class="max-h-[32rem] overflow-auto whitespace-pre-wrap break-words p-4 font-sans text-sm leading-7 text-base-content/80"
+            >{{ plainBody }}</pre>
+          </div>
         </div>
       </template>
 
