@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { RefreshCcw } from 'lucide-vue-next'
+
 const manager = useMailboxManager()
 
 const {
@@ -35,17 +37,7 @@ onMounted(refreshConfigPage)
 </script>
 
 <template>
-  <AppHeader
-    title="Dashboard"
-    :status="status"
-    :providers="providers"
-    :busy="busy"
-    :show-connect="false"
-    @refresh="refreshConfigPage"
-    @sync="syncNow()"
-  />
-
-  <header class="flex flex-col gap-3 sm:flex-row sm:items-end">
+  <header class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
     <div class="grow">
       <div class="breadcrumbs text-sm">
         <ul>
@@ -54,6 +46,18 @@ onMounted(refreshConfigPage)
         </ul>
       </div>
       <p class="text-sm text-base-content/60">配置 OAuth Client、Pub/Sub Topic 和本地自动化规则。</p>
+    </div>
+    <div class="flex shrink-0 flex-wrap items-center gap-2">
+      <button class="btn btn-sm btn-ghost max-sm:btn-square" type="button" title="刷新" @click="refreshConfigPage">
+        <span v-if="busy === 'refresh'" class="loading loading-spinner loading-xs" />
+        <RefreshCcw v-else :size="16" />
+        <span class="max-sm:hidden">刷新</span>
+      </button>
+      <button class="btn btn-sm btn-ghost max-sm:btn-square" type="button" title="同步" @click="syncNow()">
+        <span v-if="busy === 'sync-all'" class="loading loading-spinner loading-xs" />
+        <RefreshCcw v-else :size="16" />
+        <span class="max-sm:hidden">同步</span>
+      </button>
     </div>
   </header>
 

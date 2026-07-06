@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { RefreshCcw } from 'lucide-vue-next'
 import type { PublicMailAccount } from '../../../shared/types'
 
 const manager = useMailboxManager()
 const route = useRoute()
 
 const {
-  status,
   providers,
   accounts,
   selectedAccountId,
@@ -45,17 +45,7 @@ async function confirmRemoveAccount(account: PublicMailAccount) {
 </script>
 
 <template>
-  <AppHeader
-    title="Dashboard"
-    :status="status"
-    :providers="providers"
-    :busy="busy"
-    :show-connect="false"
-    @refresh="refreshAll"
-    @sync="syncNow()"
-  />
-
-  <header class="flex flex-col gap-3 sm:flex-row sm:items-end">
+  <header class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
     <div class="grow">
       <div class="breadcrumbs text-sm">
         <ul>
@@ -64,6 +54,18 @@ async function confirmRemoveAccount(account: PublicMailAccount) {
         </ul>
       </div>
       <p class="text-sm text-base-content/60">管理已授权邮箱，执行同步、监听和断开操作。</p>
+    </div>
+    <div class="flex shrink-0 flex-wrap items-center gap-2">
+      <button class="btn btn-sm btn-ghost max-sm:btn-square" type="button" title="刷新" @click="refreshAll">
+        <span v-if="busy === 'refresh'" class="loading loading-spinner loading-xs" />
+        <RefreshCcw v-else :size="16" />
+        <span class="max-sm:hidden">刷新</span>
+      </button>
+      <button class="btn btn-sm btn-ghost max-sm:btn-square" type="button" title="同步" @click="syncNow()">
+        <span v-if="busy === 'sync-all'" class="loading loading-spinner loading-xs" />
+        <RefreshCcw v-else :size="16" />
+        <span class="max-sm:hidden">同步</span>
+      </button>
     </div>
   </header>
 
