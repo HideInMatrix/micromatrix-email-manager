@@ -1,9 +1,9 @@
 import { defineEventHandler, getQuery } from 'h3'
-import { filterMessagesForUser, requireUserAccess } from '../../utils/access'
+import { filterMessagesForUser, getOptionalUserAccess } from '../../utils/access'
 import { readState } from '../../utils/storage'
 
 export default defineEventHandler(async (event) => {
-  const access = await requireUserAccess(event)
+  const access = await getOptionalUserAccess(event)
   const query = getQuery(event)
   const accountId = typeof query.accountId === 'string' ? query.accountId : ''
   const search = typeof query.q === 'string' ? query.q.trim().toLowerCase() : ''
@@ -14,6 +14,10 @@ export default defineEventHandler(async (event) => {
   const limit = clampQueryNumber(query.limit, 1, 500, 200)
   const offset = clampQueryNumber(query.offset, 0, Number.MAX_SAFE_INTEGER, 0)
   const state = await readState()
+
+  if (!access) {
+    return []
+  }
 
   return filterMessagesForUser(access, state.accounts, state.messages)
     .filter((message) => !accountId || message.accountId === accountId)

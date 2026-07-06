@@ -1,8 +1,7 @@
 export default defineNuxtRouteMiddleware(async (to) => {
   const isDashboard = to.path.startsWith('/dashboard')
-  const isMailboxHome = to.path === '/'
 
-  if (!isDashboard && !isMailboxHome) {
+  if (!isDashboard) {
     return
   }
 

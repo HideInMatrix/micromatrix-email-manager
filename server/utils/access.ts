@@ -1,10 +1,38 @@
-import { createError, type H3Event } from 'h3'
+import { createError, getHeader, type H3Event } from 'h3'
 import type { AppEvent, MailAccount, MailMessage } from '../../shared/types'
 import { getAdminSession, getApiTokenIdentity } from './admin-auth'
 
 export interface UserAccess {
   email: string
   isAdmin: boolean
+}
+
+export async function getOptionalUserAccess(
+  event: H3Event
+): Promise<UserAccess | undefined> {
+  const apiIdentity = await getApiTokenIdentity(event)
+
+  if (apiIdentity) {
+    return apiIdentity
+  }
+
+  if (hasBearerAuthorization(event)) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Invalid API token'
+    })
+  }
+
+  const session = getAdminSession(event)
+
+  if (!session.configured || !session.authenticated || !session.email) {
+    return undefined
+  }
+
+  return {
+    email: session.email,
+    isAdmin: session.isAdmin
+  }
 }
 
 export async function requireUserAccess(event: H3Event): Promise<UserAccess> {
@@ -101,4 +129,10 @@ export function accountOwnerEmail(account: MailAccount) {
 
 export function normalizeEmail(value?: string) {
   return (value || '').trim().toLowerCase()
+}
+
+function hasBearerAuthorization(event: H3Event) {
+  const authorization = getHeader(event, 'authorization') || ''
+  const [scheme, token] = authorization.split(/\s+/)
+  return scheme?.toLowerCase() === 'bearer' && Boolean(token)
 }
