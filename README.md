@@ -17,18 +17,18 @@ The default database is `.data/micromatrix-email-manager.sqlite`.
 `.env` only stores deployment-level settings:
 
 ```bash
-SITE_URL=http://127.0.0.1:3000
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=replace-with-a-strong-admin-password
-TOKEN_ENCRYPTION_KEY=replace-with-at-least-32-random-characters
+NUXT_SITE_URL=http://127.0.0.1:3000
+NUXT_ADMIN_EMAIL=admin@example.com
+NUXT_ADMIN_PASSWORD=replace-with-a-strong-admin-password
+NUXT_TOKEN_ENCRYPTION_KEY=replace-with-at-least-32-random-characters
 ```
 
 Provider OAuth settings are stored in SQLite and configured from
 `/dashboard/config` after admin login. Use these redirect URIs in each provider
 console:
 
-- Gmail: `{SITE_URL}/api/mail/oauth/gmail/callback`
-- Outlook: `{SITE_URL}/api/mail/oauth/outlook/callback`
+- Gmail: `{NUXT_SITE_URL}/api/mail/oauth/gmail/callback`
+- Outlook: `{NUXT_SITE_URL}/api/mail/oauth/outlook/callback`
 
 ## Docker
 
@@ -41,6 +41,11 @@ docker compose up --build -d
 SQLite database in the `micromatrix-email-manager-data` volume. The container runs
 `prisma db push` before starting, so a new volume is initialized
 automatically.
+
+When using Docker or 1Panel, keep Nuxt runtime config variables named with the
+`NUXT_` prefix. If you set `DATABASE_URL` yourself, point it at `/data`, for example
+`DATABASE_URL=file:/data/micromatrix-email-manager.sqlite`, so the SQLite file is
+stored in the mounted volume.
 
 For a published image:
 

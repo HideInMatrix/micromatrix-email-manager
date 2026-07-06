@@ -68,7 +68,7 @@ function safeRedirect() {
       <StatusAlert
         v-if="!configured"
         type="error"
-        message="请先在 .env 配置 ADMIN_EMAIL 和 ADMIN_PASSWORD"
+        message="请先在 .env 配置 NUXT_ADMIN_EMAIL 和 NUXT_ADMIN_PASSWORD"
         @close="configured = true"
       />
       <StatusAlert

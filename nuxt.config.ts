@@ -6,10 +6,10 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
-    siteUrl: process.env.SITE_URL || '',
-    adminEmail: process.env.ADMIN_EMAIL || '',
-    adminPassword: process.env.ADMIN_PASSWORD || '',
-    tokenEncryptionKey: process.env.TOKEN_ENCRYPTION_KEY || '',
+    siteUrl: '',
+    adminEmail: '',
+    adminPassword: '',
+    tokenEncryptionKey: '',
     public: {
       appName: 'micromatrix-email-manager'
     }
