@@ -8,11 +8,13 @@ export default defineEventHandler(async (event) => {
   const accountId = typeof query.accountId === 'string' ? query.accountId : ''
   const search = typeof query.q === 'string' ? query.q.trim().toLowerCase() : ''
   const unreadOnly = query.unread === 'true'
+  const matchedOnly = query.matched === 'true'
   const state = await readState()
 
   return filterMessagesForUser(access, state.accounts, state.messages)
     .filter((message) => !accountId || message.accountId === accountId)
     .filter((message) => !unreadOnly || message.unread)
+    .filter((message) => !matchedOnly || message.ruleMatches.length > 0)
     .filter((message) => {
       if (!search) {
         return true

@@ -1,21 +1,24 @@
 <script setup lang="ts">
-import { Inbox, Search } from 'lucide-vue-next'
-import type { MailMessage, PublicMailAccount } from '../../shared/types'
+import { Inbox, Search, Tag } from 'lucide-vue-next'
+import type { AppStatus, MailMessage, PublicMailAccount } from '../../shared/types'
 import { formatDate } from '../utils/format'
 
 const props = defineProps<{
   messages: MailMessage[]
   accounts: PublicMailAccount[]
+  status?: AppStatus
   selectedMessageId: string
   selectedAccountEmail?: string
   search: string
   unreadOnly: boolean
+  ruleMatchedOnly: boolean
 }>()
 
 const emit = defineEmits<{
   'update:selectedMessageId': [id: string]
   'update:search': [value: string]
   'update:unreadOnly': [value: boolean]
+  'update:ruleMatchedOnly': [value: boolean]
 }>()
 
 const searchModel = computed({
@@ -28,6 +31,33 @@ const unreadModel = computed({
   set: (value: boolean) => emit('update:unreadOnly', value)
 })
 
+const ruleMatchedModel = computed({
+  get: () => props.ruleMatchedOnly,
+  set: (value: boolean) => emit('update:ruleMatchedOnly', value)
+})
+
+const totalMessageCount = computed(() =>
+  props.status?.counts.messages ?? props.messages.length
+)
+
+const unreadMessageCount = computed(() =>
+  props.status?.counts.unread ??
+    props.messages.filter((message) => message.unread).length
+)
+
+const ruleMatchedMessageCount = computed(() =>
+  props.messages.filter((message) => message.ruleMatches.length).length
+)
+
+function resetStatusFilters() {
+  unreadModel.value = false
+  ruleMatchedModel.value = false
+}
+
+function toggleRuleMatchedFilter() {
+  ruleMatchedModel.value = !ruleMatchedModel.value
+}
+
 function accountName(accountId: string) {
   return props.accounts.find((account) => account.id === accountId)?.email || accountId
 }
@@ -36,7 +66,7 @@ function accountName(accountId: string) {
 <template>
   <section class="card min-h-[calc(100vh-14rem)] bg-base-200 shadow-sm">
     <div class="card-body gap-4 p-0">
-      <div class="flex flex-wrap items-start justify-between gap-3 px-5 pt-5">
+      <div class="flex flex-wrap items-start justify-between px-5 pt-5">
         <div>
           <h2 class="card-title">
             <Inbox :size="18" />
@@ -44,14 +74,36 @@ function accountName(accountId: string) {
           </h2>
           <p class="mt-1 text-sm text-base-content/60">{{ selectedAccountEmail || '全部账号' }}</p>
         </div>
-        <div class="join">
-          <label class="input input-bordered input-sm join-item flex min-w-[14.5rem] items-center gap-2">
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          <div class="join">
+            <button
+              class="btn btn-sm join-item"
+              :class="!unreadOnly ? 'btn-primary' : 'btn-ghost'"
+              type="button"
+              @click="resetStatusFilters"
+            >
+              <Inbox :size="15" />
+              {{ totalMessageCount }} 邮件
+            </button>
+            <label
+              class="btn btn-sm join-item"
+              :class="unreadOnly ? 'btn-primary' : 'btn-ghost'"
+            >
+              <input v-model="unreadModel" class="checkbox checkbox-xs" type="checkbox">
+              {{ unreadMessageCount }} 未读
+            </label>
+            <button
+              class="btn btn-sm join-item btn-ghost"
+              type="button"
+            >
+              <Tag :size="15" />
+              {{ ruleMatchedMessageCount }} 规则
+            </button>
+          </div>
+
+          <label class="input input-bordered input-sm flex min-w-[14.5rem] items-center gap-2">
             <Search :size="15" />
             <input v-model="searchModel" class="min-w-0 grow" type="search" placeholder="搜索邮件">
-          </label>
-          <label class="btn btn-sm join-item">
-            <input v-model="unreadModel" class="checkbox checkbox-primary checkbox-xs" type="checkbox">
-            未读
           </label>
         </div>
       </div>

@@ -24,7 +24,7 @@ async function logout() {
   <aside class="drawer-side z-30">
     <label :for="drawerId" class="drawer-overlay" aria-label="关闭导航" />
     <nav class="flex min-h-full w-56 flex-col bg-base-200 p-2" aria-label="后台导航">
-      <div class="flex min-h-16 items-center gap-3 px-3 font-semibold">
+      <NuxtLink class="flex min-h-16 items-center gap-3 rounded-box px-3 font-semibold hover:bg-base-300/50" to="/">
         <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-content">
           <Mail :size="18" />
         </span>
@@ -32,7 +32,7 @@ async function logout() {
           <span class="block truncate text-sm">micromatrix</span>
           <span class="block truncate text-xs font-normal text-base-content/60">Email Manager</span>
         </span>
-      </div>
+      </NuxtLink>
 
       <ul class="menu w-full gap-1">
         <li>

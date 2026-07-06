@@ -11,11 +11,13 @@ import type {
   AppStatus,
   MailProviderId,
   MailProviderSummary,
+  PublicMailAccount,
   PublicMailProviderConfig
 } from '../../shared/types'
 
 const props = defineProps<{
   providers: MailProviderSummary[]
+  accounts: PublicMailAccount[]
   providerConfigs: PublicMailProviderConfig[]
   status?: AppStatus
   busy: string
@@ -57,6 +59,30 @@ const savedProviderEntries = computed(() =>
     }))
     .filter(({ config }) => hasSavedConfig(config))
 )
+
+const selectedProviderHasAccounts = computed(() =>
+  Boolean(
+    selectedProvider.value &&
+      props.accounts.some(
+        (account) => account.provider === selectedProvider.value?.id
+      )
+  )
+)
+
+const setupSteps = computed(() => [
+  {
+    label: '选择邮箱类型',
+    complete: Boolean(selectedProvider.value)
+  },
+  {
+    label: '填写 OAuth 配置',
+    complete: Boolean(selectedProvider.value?.configured)
+  },
+  {
+    label: '账号页连接邮箱',
+    complete: selectedProviderHasAccounts.value
+  }
+])
 
 watch(
   () => props.providers,
@@ -137,9 +163,14 @@ function capabilityClass(active: boolean) {
       </div>
 
       <ul class="steps steps-horizontal w-full">
-        <li class="step step-primary">选择邮箱类型</li>
-        <li class="step step-primary">填写 OAuth 配置</li>
-        <li class="step">账号页连接邮箱</li>
+        <li
+          v-for="step in setupSteps"
+          :key="step.label"
+          class="step"
+          :class="{ 'step-primary': step.complete }"
+        >
+          {{ step.label }}
+        </li>
       </ul>
 
       <form

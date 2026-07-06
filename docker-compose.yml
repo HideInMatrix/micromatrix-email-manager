@@ -12,12 +12,9 @@ services:
     environment:
       DATABASE_URL: ${DOCKER_DATABASE_URL:-file:/data/micromatrix-email-manager.sqlite}
     volumes:
-      - micromatrix-email-manager-data:/data
+      - ./.data:/data
     networks:
       - 1panel-network
-
-volumes:
-  micromatrix-email-manager-data:
 
 networks:
   1panel-network:

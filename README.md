@@ -54,13 +54,14 @@ cp .env.example .env
 docker compose up --build -d
 ```
 
-`docker-compose.yml` 默认将应用映射到 `APP_PORT`，未设置时使用 `3000`。SQLite 数据库会保存在 `micromatrix-email-manager-data` volume 中，容器启动前会执行 `prisma db push`，新 volume 会自动初始化数据库表。
+`docker-compose.yml` 默认将应用映射到 `APP_PORT`，未设置时使用 `3000`。SQLite 数据库会保存在项目目录的 `.data/micromatrix-email-manager.sqlite`，容器启动前会执行 `prisma db push`，新目录会自动初始化数据库表。
 
 1Panel / Docker 部署时注意：
 
 - `.env` 中使用 `NUXT_SITE_URL`、`NUXT_ADMIN_EMAIL`、`NUXT_ADMIN_PASSWORD`、`NUXT_USER_CREDENTIALS`、`NUXT_TOKEN_ENCRYPTION_KEY`。
 - 不要用本地的 `DATABASE_URL=file:./.data/...` 覆盖容器数据库路径。
 - `docker-compose.yml` 已强制容器内数据库为 `file:/data/micromatrix-email-manager.sqlite`。
+- 容器内 `/data` 会直接映射到宿主机项目目录的 `.data`。
 - 如确实需要覆盖容器数据库路径，请设置 `DOCKER_DATABASE_URL`，不要设置 `DATABASE_URL`。
 - 使用 Nginx 反向代理时，公网访问地址必须和 `NUXT_SITE_URL` 完全一致，例如 `https://sms.matrixfrp.gq`。
 

@@ -17,6 +17,7 @@ const {
   selectedMessage,
   search,
   unreadOnly,
+  ruleMatchedOnly,
   busy,
   error,
   notice,
@@ -45,7 +46,7 @@ async function refreshWorkspace() {
 
 onMounted(refreshWorkspace)
 
-watch([search, unreadOnly], async () => {
+watch([search, unreadOnly, ruleMatchedOnly], async () => {
   await loadMessages()
 })
 
@@ -89,8 +90,10 @@ async function confirmTrashMessage(message: MailMessage) {
       v-model:selected-message-id="selectedMessageId"
       v-model:search="search"
       v-model:unread-only="unreadOnly"
+      v-model:rule-matched-only="ruleMatchedOnly"
       :messages="messages"
       :accounts="accounts"
+      :status="status"
       selected-account-email="全部账号"
     />
 

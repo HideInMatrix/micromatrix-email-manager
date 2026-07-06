@@ -25,6 +25,7 @@ export function useMailboxManager() {
   const selectedMessageId = ref('')
   const search = ref('')
   const unreadOnly = ref(false)
+  const ruleMatchedOnly = ref(false)
   const busy = ref('')
   const error = ref('')
   const notice = ref('')
@@ -75,7 +76,8 @@ export function useMailboxManager() {
       query: {
         accountId: selectedAccountId.value || undefined,
         q: search.value || undefined,
-        unread: unreadOnly.value || undefined
+        unread: unreadOnly.value || undefined,
+        matched: ruleMatchedOnly.value || undefined
       }
     })
 
@@ -252,6 +254,7 @@ export function useMailboxManager() {
     selectedMessage,
     search,
     unreadOnly,
+    ruleMatchedOnly,
     busy,
     error,
     notice,

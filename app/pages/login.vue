@@ -2,6 +2,7 @@
 import { LockKeyhole, LogIn } from 'lucide-vue-next'
 
 const route = useRoute()
+const router = useRouter()
 
 const email = ref('')
 const password = ref('')
@@ -26,7 +27,7 @@ onMounted(async () => {
   configured.value = session.configured
 
   if (session.authenticated) {
-    await navigateTo(safeRedirect(defaultRedirect(session.isAdmin)))
+    await redirectAfterLogin(session.isAdmin)
   }
 })
 
@@ -44,7 +45,7 @@ async function login() {
         password: password.value
       }
     })
-    await navigateTo(safeRedirect(defaultRedirect(session.isAdmin)))
+    await redirectAfterLogin(session.isAdmin)
   } catch (caught) {
     error.value = caught instanceof Error ? caught.message : '登录失败'
   } finally {
@@ -58,9 +59,22 @@ function defaultRedirect(isAdmin: boolean) {
 
 function safeRedirect(fallback = '/') {
   const redirect = route.query.redirect
-  return typeof redirect === 'string' && redirect.startsWith('/')
-    ? redirect
-    : fallback
+
+  if (
+    typeof redirect !== 'string' ||
+    !redirect.startsWith('/') ||
+    redirect.startsWith('//') ||
+    redirect.startsWith('/login')
+  ) {
+    return fallback
+  }
+
+  return redirect
+}
+
+async function redirectAfterLogin(isAdmin: boolean) {
+  const target = safeRedirect(defaultRedirect(isAdmin))
+  await router.replace(!isAdmin && target.startsWith('/dashboard') ? '/' : target)
 }
 </script>
 

@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import {
   Home,
-  Inbox,
   LayoutDashboard,
-  MailOpen,
   Menu,
   Plug,
-  RefreshCcw,
-  Tag
+  RefreshCcw
 } from 'lucide-vue-next'
 import type { AppStatus, MailProviderSummary } from '../../shared/types'
 
@@ -61,21 +58,6 @@ const primaryProvider = computed(() =>
       </div>
     </div>
 
-    <div v-if="status" class="navbar-center hidden gap-2 xl:flex">
-      <span class="badge badge-ghost h-8 gap-1">
-        <Inbox :size="15" />
-        {{ status.counts.messages }} 邮件
-      </span>
-      <span class="badge badge-warning h-8 gap-1">
-        <MailOpen :size="15" />
-        {{ status.counts.unread }} 未读
-      </span>
-      <span class="badge badge-ghost h-8 gap-1">
-        <Tag :size="15" />
-        {{ status.counts.rules }} 规则
-      </span>
-    </div>
-
     <div class="navbar-end gap-2">
       <NuxtLink v-if="homeHref" class="btn btn-sm btn-ghost max-sm:btn-square" :to="homeHref" title="邮件工作台">
         <Home :size="16" />
@@ -117,19 +99,6 @@ const primaryProvider = computed(() =>
         <span class="max-sm:hidden">连接 {{ primaryProvider.name }}</span>
       </button>
 
-      <div v-if="status" class="dropdown dropdown-end xl:hidden">
-        <button class="btn btn-circle btn-sm btn-ghost" type="button" tabindex="0" aria-label="查看状态">
-          <div class="indicator">
-            <span v-if="status.counts.unread" class="status status-warning indicator-item" />
-            <Inbox :size="16" />
-          </div>
-        </button>
-        <ul tabindex="0" class="menu dropdown-content z-10 mt-2 w-48 rounded-box bg-base-100 p-2 shadow-xl">
-          <li><span>{{ status.counts.messages }} 邮件</span></li>
-          <li><span>{{ status.counts.unread }} 未读</span></li>
-          <li><span>{{ status.counts.rules }} 规则</span></li>
-        </ul>
-      </div>
     </div>
   </header>
 </template>

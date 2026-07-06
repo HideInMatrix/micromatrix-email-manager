@@ -4,6 +4,7 @@ const manager = useMailboxManager()
 const {
   status,
   providers,
+  accounts,
   providerConfigs,
   rules,
   busy,
@@ -72,6 +73,7 @@ onMounted(refreshConfigPage)
   <BitsRevealPanel as="main" class="grid min-w-0 gap-4 xl:grid-cols-[minmax(320px,460px)_minmax(420px,1fr)]">
     <ProviderPanel
       :providers="providers"
+      :accounts="accounts"
       :provider-configs="providerConfigs"
       :status="status"
       :busy="busy"
