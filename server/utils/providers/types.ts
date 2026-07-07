@@ -70,5 +70,10 @@ export interface MailProvider {
     account: MailAccount,
     message: MailMessage
   ) => Promise<void>
+  markReadMessage?: (
+    event: H3Event,
+    account: MailAccount,
+    message: MailMessage
+  ) => Promise<void>
   parseWebhook?: (body: unknown) => ProviderWebhookResult
 }

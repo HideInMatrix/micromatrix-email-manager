@@ -16,6 +16,7 @@ import {
   getOAuthRedirectUri,
   gmailGetMessage,
   gmailListMessageIds,
+  gmailMarkMessageRead,
   gmailTrashMessage,
   gmailWatch,
   GMAIL_PROVIDER_ID,
@@ -197,6 +198,17 @@ export const gmailProvider: MailProvider = {
 
     const accessToken = await getAccessToken(event, account)
     await gmailTrashMessage(accessToken, message.id)
+  },
+  async markReadMessage(event: H3Event, account: MailAccount, message) {
+    if (!hasGmailModifyScope(account.scope)) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: 'Gmail account needs reauthorization with Gmail modify access'
+      })
+    }
+
+    const accessToken = await getAccessToken(event, account)
+    await gmailMarkMessageRead(accessToken, message.id)
   },
   parseWebhook(body: unknown): ProviderWebhookResult {
     const rawData = (body as PubSubPushBody).message?.data

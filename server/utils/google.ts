@@ -275,6 +275,28 @@ export async function gmailTrashMessage(accessToken: string, messageId: string) 
   return (await response.json()) as GmailMessageRaw
 }
 
+export async function gmailMarkMessageRead(accessToken: string, messageId: string) {
+  const response = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}/modify`,
+    {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        removeLabelIds: ['UNREAD']
+      })
+    }
+  )
+
+  if (!response.ok) {
+    throw await googleApiError(response, 'Could not mark Gmail message as read')
+  }
+
+  return (await response.json()) as GmailMessageRaw
+}
+
 export async function gmailWatch(accessToken: string, topicName: string) {
   const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/watch', {
     method: 'POST',

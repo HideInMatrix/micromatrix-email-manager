@@ -1,5 +1,8 @@
 export default defineNuxtRouteMiddleware(async (to) => {
   const isDashboard = to.path.startsWith('/dashboard')
+  const isUserDashboardPage =
+    to.path.startsWith('/dashboard/accounts') ||
+    to.path.startsWith('/dashboard/tokens')
 
   if (!isDashboard) {
     return
@@ -25,7 +28,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     })
   }
 
-  if (isDashboard && !session.isAdmin) {
-    return navigateTo('/')
+  if (!isUserDashboardPage && !session.isAdmin) {
+    return navigateTo('/dashboard/accounts')
   }
 })

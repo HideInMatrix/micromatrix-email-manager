@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import {
   Activity,
+  KeyRound,
   LayoutDashboard,
+  ListChecks,
   LogOut,
   Mail,
   Settings,
@@ -12,6 +14,21 @@ withDefaults(defineProps<{
   drawerId?: string
 }>(), {
   drawerId: 'app-drawer'
+})
+
+const headers = import.meta.server ? useRequestHeaders(['cookie']) : undefined
+const { data: session } = await useFetch<{
+  configured: boolean
+  authenticated: boolean
+  email?: string
+  isAdmin: boolean
+}>('/api/admin/session', {
+  headers,
+  default: () => ({
+    configured: false,
+    authenticated: false,
+    isAdmin: false
+  })
 })
 
 async function logout() {
@@ -35,7 +52,7 @@ async function logout() {
       </NuxtLink>
 
       <ul class="menu w-full gap-1">
-        <li>
+        <li v-if="session?.isAdmin">
           <NuxtLink exact-active-class="menu-active" to="/dashboard">
             <LayoutDashboard :size="16" />
             后台概览
@@ -47,13 +64,25 @@ async function logout() {
             邮箱账号
           </NuxtLink>
         </li>
-        <li>
+        <li v-if="session?.isAdmin">
+          <NuxtLink exact-active-class="menu-active" to="/dashboard/rules">
+            <ListChecks :size="16" />
+            自动化规则
+          </NuxtLink>
+        </li>
+        <li v-if="session?.isAdmin">
           <NuxtLink exact-active-class="menu-active" to="/dashboard/config">
             <Settings :size="16" />
             OAuth 配置
           </NuxtLink>
         </li>
         <li>
+          <NuxtLink exact-active-class="menu-active" to="/dashboard/tokens">
+            <KeyRound :size="16" />
+            API Token
+          </NuxtLink>
+        </li>
+        <li v-if="session?.isAdmin">
           <NuxtLink exact-active-class="menu-active" to="/dashboard/events">
             <Activity :size="16" />
             运行事件

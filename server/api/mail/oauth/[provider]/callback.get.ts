@@ -5,6 +5,7 @@ import {
   getRouterParam,
   sendRedirect
 } from 'h3'
+import { requireUserAccess } from '../../../../utils/access'
 import { getProvider } from '../../../../utils/providers'
 import { addEvent, readState, writeState } from '../../../../utils/storage'
 
@@ -40,6 +41,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Invalid OAuth state' })
   }
 
+  const access = await requireUserAccess(event)
   const profile = await provider.completeOAuth(event, code)
   const now = new Date().toISOString()
   const existing = state.accounts.find(
@@ -53,7 +55,7 @@ export default defineEventHandler(async (event) => {
 
   const account = {
     id: existing?.id || `${provider.id}:${profile.id}`,
-    ownerEmail: existing?.ownerEmail || profile.email,
+    ownerEmail: access.isAdmin ? existing?.ownerEmail || profile.email : access.email,
     provider: provider.id,
     email: profile.email,
     name: profile.name,

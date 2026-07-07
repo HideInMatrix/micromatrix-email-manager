@@ -27,10 +27,17 @@ const {
   loadMessages,
   syncNow,
   trashMessage,
+  markMessageRead,
   trashMessages
 } = manager
 const isAuthenticated = computed(() => Boolean(session.value?.authenticated))
-const dashboardHref = computed(() => session.value?.isAdmin ? '/dashboard' : undefined)
+const dashboardHref = computed(() => {
+  if (!session.value?.authenticated) {
+    return undefined
+  }
+
+  return session.value.isAdmin ? '/dashboard' : '/dashboard/accounts'
+})
 
 useHead({
   title: 'MailManager · 邮件同步与规则管理'
@@ -75,6 +82,15 @@ async function confirmTrashMessages(messages: MailMessage[]) {
 
   await trashMessages(messages)
 }
+
+function openMessage(messageId: string) {
+  selectedMessageId.value = messageId
+  const message = messages.value.find((item) => item.id === messageId)
+
+  if (message) {
+    void markMessageRead(message)
+  }
+}
 </script>
 
 <template>
@@ -108,7 +124,7 @@ async function confirmTrashMessages(messages: MailMessage[]) {
 
   <BitsRevealPanel as="main" class="flex-1 grid min-w-0 gap-4 xl:grid-cols-[minmax(520px,1fr)_minmax(340px,0.72fr)]">
     <InboxPanel
-      v-model:selected-message-id="selectedMessageId"
+      :selected-message-id="selectedMessageId"
       v-model:search="search"
       v-model:unread-only="unreadOnly"
       v-model:rule-matched-only="ruleMatchedOnly"
@@ -117,6 +133,7 @@ async function confirmTrashMessages(messages: MailMessage[]) {
       :status="status"
       :busy="busy"
       selected-account-email="全部账号"
+      @update:selected-message-id="openMessage"
       @trash-selected="confirmTrashMessages"
     />
 

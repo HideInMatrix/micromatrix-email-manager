@@ -7,12 +7,17 @@ import type {
 } from '../../shared/types'
 import { formatDate } from '../utils/format'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   users: PublicAppUser[]
   apiTokens: PublicApiToken[]
   createdApiToken?: CreatedApiToken
   busy: string
-}>()
+  currentUserEmail?: string
+  canManageUsers?: boolean
+}>(), {
+  currentUserEmail: '',
+  canManageUsers: false
+})
 
 const emit = defineEmits<{
   create: [payload: { userEmail: string, name?: string }]
@@ -24,10 +29,24 @@ const form = reactive({
   name: ''
 })
 
+const targetUserEmail = computed(() =>
+  props.canManageUsers ? form.userEmail : props.currentUserEmail
+)
+
 watch(
-  () => props.users,
-  (users) => {
+  [() => props.users, () => props.currentUserEmail, () => props.canManageUsers],
+  ([users, currentUserEmail, canManageUsers]) => {
+    if (!canManageUsers) {
+      form.userEmail = currentUserEmail
+      return
+    }
+
     if (!form.userEmail && users[0]) {
+      form.userEmail = users[0].email
+      return
+    }
+
+    if (form.userEmail && users.length && !users.some((user) => user.email === form.userEmail)) {
       form.userEmail = users[0].email
     }
   },
@@ -35,12 +54,12 @@ watch(
 )
 
 function createToken() {
-  if (!form.userEmail) {
+  if (!targetUserEmail.value) {
     return
   }
 
   emit('create', {
-    userEmail: form.userEmail,
+    userEmail: targetUserEmail.value,
     name: form.name.trim() || undefined
   })
   form.name = ''
@@ -72,7 +91,7 @@ async function copyToken() {
           class="btn btn-square btn-sm btn-outline"
           type="button"
           title="生成 Token"
-          :disabled="!form.userEmail || busy === 'api-token-create'"
+          :disabled="!targetUserEmail || busy === 'api-token-create'"
           @click="createToken"
         >
           <span v-if="busy === 'api-token-create'" class="loading loading-spinner loading-xs" />
@@ -81,7 +100,7 @@ async function copyToken() {
       </div>
 
       <form class="grid gap-3 border-b border-base-300 px-5 pb-5" @submit.prevent="createToken">
-        <fieldset class="fieldset p-0">
+        <fieldset v-if="canManageUsers" class="fieldset p-0">
           <legend class="fieldset-legend">用户账号</legend>
           <select v-model="form.userEmail" class="select select-bordered w-full">
             <option v-if="!users.length" value="">暂无用户</option>
@@ -94,6 +113,16 @@ async function copyToken() {
             </option>
           </select>
         </fieldset>
+        <fieldset v-else class="fieldset p-0">
+          <legend class="fieldset-legend">用户账号</legend>
+          <input
+            class="input input-bordered w-full"
+            type="email"
+            :value="currentUserEmail"
+            disabled
+            placeholder="当前登录用户"
+          >
+        </fieldset>
 
         <fieldset class="fieldset p-0">
           <legend class="fieldset-legend">名称</legend>
@@ -103,7 +132,7 @@ async function copyToken() {
         <button
           class="btn btn-primary w-full"
           type="submit"
-          :disabled="!form.userEmail || busy === 'api-token-create'"
+          :disabled="!targetUserEmail || busy === 'api-token-create'"
         >
           <span v-if="busy === 'api-token-create'" class="loading loading-spinner loading-xs" />
           <Plus v-else :size="16" />

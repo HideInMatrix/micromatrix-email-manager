@@ -35,6 +35,7 @@ export function useMailboxManager() {
   const busy = ref('')
   const error = ref('')
   const notice = ref('')
+  const markingReadKeys = new Set<string>()
 
   const selectedMessage = computed(() =>
     messages.value.find((message) => message.id === selectedMessageId.value)
@@ -236,6 +237,36 @@ export function useMailboxManager() {
     })
   }
 
+  async function markMessageRead(message: MailMessage) {
+    const key = `${message.accountId}:${message.id}`
+
+    if (!message.unread || markingReadKeys.has(key)) {
+      return
+    }
+
+    markingReadKeys.add(key)
+    markLocalMessageRead(message)
+
+    try {
+      await $fetch(`/api/messages/${encodeURIComponent(message.id)}/read`, {
+        method: 'POST',
+        body: {
+          accountId: message.accountId
+        }
+      })
+      await loadStatus()
+
+      if (unreadOnly.value) {
+        await loadMessages()
+      }
+    } catch (caught) {
+      error.value =
+        caught instanceof Error ? caught.message : '标记已读失败，请检查服务端日志'
+    } finally {
+      markingReadKeys.delete(key)
+    }
+  }
+
   async function trashMessages(selectedMessages: MailMessage[]) {
     const messagesToTrash = Array.from(
       new Map(
@@ -316,6 +347,20 @@ export function useMailboxManager() {
     )
   }
 
+  function markLocalMessageRead(message: MailMessage) {
+    const target = messages.value.find(
+      (item) => item.id === message.id && item.accountId === message.accountId
+    )
+
+    if (!target) {
+      return
+    }
+
+    target.unread = false
+    target.labels = target.labels.filter((label) => label !== 'UNREAD')
+    target.updatedAt = new Date().toISOString()
+  }
+
   return {
     status,
     providers,
@@ -353,6 +398,7 @@ export function useMailboxManager() {
     toggleRule,
     deleteRule,
     trashMessage,
+    markMessageRead,
     trashMessages,
     createApiToken,
     revokeApiToken,

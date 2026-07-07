@@ -84,7 +84,7 @@ onMounted(refreshAll)
         <div class="stat-desc">待处理邮件</div>
       </div>
 
-      <NuxtLink class="stat hover:bg-base-300/40" to="/dashboard/config">
+      <NuxtLink class="stat hover:bg-base-300/40" to="/dashboard/rules">
         <div class="stat-figure text-accent"><Tag :size="28" /></div>
         <div class="stat-title">规则</div>
         <div class="stat-value font-mono">{{ status?.counts.rules ?? 0 }}</div>

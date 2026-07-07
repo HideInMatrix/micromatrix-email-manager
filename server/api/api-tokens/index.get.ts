@@ -1,14 +1,15 @@
 import { defineEventHandler } from 'h3'
-import { requireAdmin } from '../../utils/admin-auth'
+import { normalizeEmail, requireUserAccess } from '../../utils/access'
 import { toPublicApiToken } from '../../utils/api-tokens'
 import { prisma } from '../../utils/prisma'
 
 export default defineEventHandler(async (event) => {
-  requireAdmin(event)
+  const access = await requireUserAccess(event)
 
   const tokens = await prisma.apiToken.findMany({
     where: {
-      revokedAt: null
+      revokedAt: null,
+      ...(!access.isAdmin ? { userEmail: normalizeEmail(access.email) } : {})
     },
     orderBy: { createdAt: 'desc' }
   })

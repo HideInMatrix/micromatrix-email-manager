@@ -1,9 +1,9 @@
 import { createError, defineEventHandler, getRouterParam } from 'h3'
-import { requireAdmin } from '../../utils/admin-auth'
+import { normalizeEmail, requireUserAccess } from '../../utils/access'
 import { prisma } from '../../utils/prisma'
 
 export default defineEventHandler(async (event) => {
-  requireAdmin(event)
+  const access = await requireUserAccess(event)
 
   const id = getRouterParam(event, 'id')
 
@@ -14,7 +14,8 @@ export default defineEventHandler(async (event) => {
   const result = await prisma.apiToken.updateMany({
     where: {
       id,
-      revokedAt: null
+      revokedAt: null,
+      ...(!access.isAdmin ? { userEmail: normalizeEmail(access.email) } : {})
     },
     data: {
       revokedAt: new Date()

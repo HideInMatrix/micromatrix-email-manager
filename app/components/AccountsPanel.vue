@@ -17,6 +17,7 @@ const props = defineProps<{
   providers: MailProviderSummary[]
   selectedAccountId: string
   busy: string
+  canManageProviders?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -151,7 +152,7 @@ function accountStatusClass(status: PublicMailAccount['status']) {
                 连接 {{ provider.name }}
               </button>
               <NuxtLink
-                v-if="!provider.configured"
+                v-if="!provider.configured && canManageProviders"
                 class="btn btn-outline btn-sm"
                 to="/dashboard/config"
               >

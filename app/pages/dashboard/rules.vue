@@ -4,35 +4,35 @@ import { RefreshCcw } from 'lucide-vue-next'
 const manager = useMailboxManager()
 
 const {
-  status,
   providers,
-  accounts,
-  providerConfigs,
+  rules,
   busy,
   error,
   notice,
-  refreshAll,
-  loadProviderConfigs,
+  loadStatus,
+  loadRules,
   syncNow,
-  saveProviderConfig
+  saveRule,
+  toggleRule,
+  deleteRule
 } = manager
 
 useHead({
-  title: '配置 · micromatrix-email-manager'
+  title: '规则 · micromatrix-email-manager'
 })
 
 definePageMeta({
   layout: 'dashboard'
 })
 
-async function refreshConfigPage() {
+async function refreshRulesPage() {
   await Promise.all([
-    refreshAll(),
-    loadProviderConfigs()
+    loadStatus(),
+    loadRules()
   ])
 }
 
-onMounted(refreshConfigPage)
+onMounted(refreshRulesPage)
 </script>
 
 <template>
@@ -41,13 +41,13 @@ onMounted(refreshConfigPage)
       <div class="breadcrumbs text-sm">
         <ul>
           <li><NuxtLink to="/dashboard">Dashboard</NuxtLink></li>
-          <li><h2>Configuration</h2></li>
+          <li><h2>Rules</h2></li>
         </ul>
       </div>
-      <p class="text-sm text-base-content/60">配置 OAuth Client、Secret、Pub/Sub Topic 和 Outlook 租户信息。</p>
+      <p class="text-sm text-base-content/60">创建和管理本地自动化规则。</p>
     </div>
     <div class="flex shrink-0 flex-wrap items-center gap-2">
-      <button class="btn btn-sm btn-ghost max-sm:btn-square" type="button" title="刷新" @click="refreshConfigPage">
+      <button class="btn btn-sm btn-ghost max-sm:btn-square" type="button" title="刷新" @click="refreshRulesPage">
         <span v-if="busy === 'refresh'" class="loading loading-spinner loading-xs" />
         <RefreshCcw v-else :size="16" />
         <span class="max-sm:hidden">刷新</span>
@@ -74,13 +74,13 @@ onMounted(refreshConfigPage)
   />
 
   <BitsRevealPanel as="main" class="grid min-w-0 gap-4">
-    <ProviderPanel
+    <RulesPanel
       :providers="providers"
-      :accounts="accounts"
-      :provider-configs="providerConfigs"
-      :status="status"
+      :rules="rules"
       :busy="busy"
-      @save-config="saveProviderConfig"
+      @save="saveRule"
+      @toggle="toggleRule"
+      @delete="deleteRule"
     />
   </BitsRevealPanel>
 </template>

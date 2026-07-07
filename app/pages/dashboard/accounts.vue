@@ -4,6 +4,20 @@ import type { PublicMailAccount } from '../../../shared/types'
 
 const manager = useMailboxManager()
 const route = useRoute()
+const headers = import.meta.server ? useRequestHeaders(['cookie']) : undefined
+const { data: session } = await useFetch<{
+  configured: boolean
+  authenticated: boolean
+  email?: string
+  isAdmin: boolean
+}>('/api/admin/session', {
+  headers,
+  default: () => ({
+    configured: false,
+    authenticated: false,
+    isAdmin: false
+  })
+})
 
 const {
   providers,
@@ -49,7 +63,8 @@ async function confirmRemoveAccount(account: PublicMailAccount) {
     <div class="grow">
       <div class="breadcrumbs text-sm">
         <ul>
-          <li><NuxtLink to="/dashboard">Dashboard</NuxtLink></li>
+          <li v-if="session?.isAdmin"><NuxtLink to="/dashboard">Dashboard</NuxtLink></li>
+          <li v-else><span>Dashboard</span></li>
           <li><h2>Accounts</h2></li>
         </ul>
       </div>
@@ -88,6 +103,7 @@ async function confirmRemoveAccount(account: PublicMailAccount) {
       :accounts="accounts"
       :providers="providers"
       :busy="busy"
+      :can-manage-providers="Boolean(session?.isAdmin)"
       @connect="connectProvider($event.id)"
       @sync="syncNow"
       @watch="startWatch"

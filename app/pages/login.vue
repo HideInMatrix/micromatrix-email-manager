@@ -75,7 +75,7 @@ watch(
 )
 
 function defaultRedirect(isAdmin: boolean) {
-  return isAdmin ? '/dashboard' : '/'
+  return isAdmin ? '/dashboard' : '/dashboard/accounts'
 }
 
 function safeRedirect(fallback = '/') {
@@ -95,7 +95,14 @@ function safeRedirect(fallback = '/') {
 
 async function redirectAfterLogin(isAdmin: boolean) {
   const target = safeRedirect(defaultRedirect(isAdmin))
-  await router.replace(!isAdmin && target.startsWith('/dashboard') ? '/' : target)
+  await router.replace(
+    !isAdmin &&
+      target.startsWith('/dashboard') &&
+      !target.startsWith('/dashboard/accounts') &&
+      !target.startsWith('/dashboard/tokens')
+      ? '/dashboard/accounts'
+      : target
+  )
 }
 </script>
 

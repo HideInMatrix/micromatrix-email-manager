@@ -1,9 +1,9 @@
 import { createError, defineEventHandler, getRouterParam } from 'h3'
-import { requireAdmin } from '../../utils/admin-auth'
+import { assertCanAccessAccount, requireUserAccess } from '../../utils/access'
 import { addEvent, readState, writeState } from '../../utils/storage'
 
 export default defineEventHandler(async (event) => {
-  requireAdmin(event)
+  const access = await requireUserAccess(event)
   const id = getRouterParam(event, 'id')
 
   if (!id) {
@@ -17,6 +17,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Account not found' })
   }
 
+  assertCanAccessAccount(access, account)
   state.accounts = state.accounts.filter((item) => item.id !== id)
   state.messages = state.messages.filter((message) => message.accountId !== id)
   addEvent(state, {

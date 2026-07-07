@@ -285,6 +285,24 @@ async function outlookMoveMessageToTrash(accessToken: string, messageId: string)
   )
 }
 
+async function outlookMarkMessageRead(accessToken: string, messageId: string) {
+  const url = `${GRAPH_BASE_URL}/me/messages/${encodeURIComponent(messageId)}`
+  await graphFetch<OutlookMessageRaw>(
+    accessToken,
+    url,
+    {
+      method: 'PATCH',
+      headers: {
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        isRead: true
+      })
+    },
+    'Could not mark Outlook message as read'
+  )
+}
+
 async function graphFetch<T>(
   accessToken: string,
   input: string | URL,
@@ -426,6 +444,17 @@ export const outlookProvider: MailProvider = {
 
     const accessToken = await getOutlookAccessToken(event, account)
     await outlookMoveMessageToTrash(accessToken, message.id)
+  },
+  async markReadMessage(event: H3Event, account: MailAccount, message: MailMessage) {
+    if (!hasOutlookMailReadWriteScope(account.scope)) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: 'Outlook account needs reauthorization with Mail.ReadWrite access'
+      })
+    }
+
+    const accessToken = await getOutlookAccessToken(event, account)
+    await outlookMarkMessageRead(accessToken, message.id)
   },
   parseWebhook(_body: unknown): ProviderWebhookResult {
     return {}
