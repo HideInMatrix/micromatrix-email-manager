@@ -38,21 +38,21 @@ const emit = defineEmits<{
   ]
 }>()
 
+interface ProviderConfigForm {
+  clientId: string
+  clientSecret: string
+  pubsubTopic: string
+  tenantId: string
+}
+
 const selectedProviderId = ref<MailProviderId>('gmail')
 const revealedSecrets = reactive<Partial<Record<MailProviderId, string>>>({})
 const revealingSecrets = reactive<Partial<Record<MailProviderId, boolean>>>({})
 const secretErrors = reactive<Partial<Record<MailProviderId, string>>>({})
-const forms = reactive<
-  Record<
-    string,
-    {
-      clientId: string
-      clientSecret: string
-      pubsubTopic: string
-      tenantId: string
-    }
-  >
->({})
+const forms = reactive<Record<MailProviderId, ProviderConfigForm>>({
+  gmail: createProviderConfigForm(),
+  outlook: createProviderConfigForm()
+})
 
 const selectedProvider = computed(() =>
   props.providers.find((provider) => provider.id === selectedProviderId.value)
@@ -95,11 +95,13 @@ const setupSteps = computed(() => [
 watch(
   () => props.providers,
   (providers) => {
+    const firstProvider = providers[0]
+
     if (
-      providers.length &&
+      firstProvider &&
       !providers.some((provider) => provider.id === selectedProviderId.value)
     ) {
-      selectedProviderId.value = providers[0].id
+      selectedProviderId.value = firstProvider.id
     }
   },
   { immediate: true }
@@ -120,6 +122,15 @@ watch(
   },
   { immediate: true }
 )
+
+function createProviderConfigForm(): ProviderConfigForm {
+  return {
+    clientId: '',
+    clientSecret: '',
+    pubsubTopic: '',
+    tenantId: ''
+  }
+}
 
 function publicConfig(providerId: MailProviderId) {
   return props.providerConfigs.find((item) => item.provider === providerId)
@@ -219,7 +230,7 @@ function capabilityClass(active: boolean) {
       </ul>
 
       <form
-        v-if="selectedProvider && forms[selectedProvider.id]"
+        v-if="selectedProvider"
         class="grid gap-4 rounded-box border border-base-300 bg-base-100 p-4"
         @submit.prevent="saveSelectedProviderConfig"
       >
