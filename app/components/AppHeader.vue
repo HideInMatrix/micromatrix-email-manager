@@ -2,9 +2,11 @@
 import {
   Home,
   LayoutDashboard,
+  LogIn,
   Menu,
   Plug,
-  RefreshCcw
+  RefreshCcw,
+  UserPlus
 } from 'lucide-vue-next'
 import type { AppStatus, MailProviderSummary } from '../../shared/types'
 
@@ -18,6 +20,7 @@ const props = withDefaults(defineProps<{
   dashboardHref?: string
   drawerId?: string
   showDrawerButton?: boolean
+  showAuthLinks?: boolean
   showConnect?: boolean
   showSync?: boolean
 }>(), {
@@ -25,6 +28,7 @@ const props = withDefaults(defineProps<{
   eyebrow: 'micromatrix-email-manager',
   drawerId: 'app-drawer',
   showDrawerButton: true,
+  showAuthLinks: false,
   showConnect: true,
   showSync: true
 })
@@ -41,7 +45,7 @@ const primaryProvider = computed(() =>
 </script>
 
 <template>
-  <header class="navbar gap-2 bg-base-100 p-0">
+  <header class="navbar gap-2 bg-base-100 p-0 min-h-1">
     <div class="navbar-start min-w-0 gap-2">
       <label
         v-if="showDrawerButton"
@@ -71,6 +75,24 @@ const primaryProvider = computed(() =>
       >
         <LayoutDashboard :size="16" />
         <span class="max-sm:hidden">后台</span>
+      </NuxtLink>
+      <NuxtLink
+        v-if="showAuthLinks"
+        class="btn btn-sm btn-ghost max-sm:btn-square"
+        to="/login"
+        title="登录"
+      >
+        <LogIn :size="16" />
+        <span class="max-sm:hidden">登录</span>
+      </NuxtLink>
+      <NuxtLink
+        v-if="showAuthLinks"
+        class="btn btn-sm btn-primary max-sm:btn-square"
+        to="/login?mode=register"
+        title="注册"
+      >
+        <UserPlus :size="16" />
+        <span class="max-sm:hidden">注册</span>
       </NuxtLink>
       <button class="btn btn-sm btn-ghost max-sm:btn-square" type="button" title="刷新" @click="emit('refresh')">
         <span v-if="busy === 'refresh'" class="loading loading-spinner loading-xs" />

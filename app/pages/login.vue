@@ -10,7 +10,7 @@ const passwordConfirm = ref('')
 const busy = ref(false)
 const error = ref('')
 const configured = ref(true)
-const mode = ref<'login' | 'register'>('login')
+const mode = ref<'login' | 'register'>(route.query.mode === 'register' ? 'register' : 'login')
 
 useHead({
   title: '登录 · micromatrix-email-manager'
@@ -62,6 +62,17 @@ function switchMode(nextMode: 'login' | 'register') {
   password.value = ''
   passwordConfirm.value = ''
 }
+
+watch(
+  () => route.query.mode,
+  (nextMode) => {
+    if (nextMode === 'register') {
+      switchMode('register')
+    } else if (nextMode === 'login') {
+      switchMode('login')
+    }
+  }
+)
 
 function defaultRedirect(isAdmin: boolean) {
   return isAdmin ? '/dashboard' : '/'

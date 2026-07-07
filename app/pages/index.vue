@@ -87,6 +87,7 @@ async function confirmTrashMessages(messages: MailMessage[]) {
     :dashboard-href="dashboardHref"
     :show-connect="false"
     :show-drawer-button="false"
+    :show-auth-links="!isAuthenticated"
     :show-sync="isAuthenticated"
     @refresh="refreshWorkspace"
     @sync="syncNow()"
@@ -105,39 +106,7 @@ async function confirmTrashMessages(messages: MailMessage[]) {
     @close="notice = ''"
   />
 
-  <section class="grid gap-4 rounded-box bg-base-200 p-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-    <div class="grid gap-2">
-      <p class="text-sm font-semibold text-primary">MailManager</p>
-      <h2 class="text-2xl font-bold leading-tight">集中同步、查看和整理已授权邮箱中的邮件</h2>
-      <p class="max-w-3xl text-sm leading-6 text-base-content/70">
-        MailManager 用于连接用户授权的 Gmail 或 Outlook 邮箱账号，帮助用户同步邮件、搜索邮件、查看邮件详情，并通过规则筛选或整理邮件。未登录访问首页时不会展示任何邮箱数据。
-      </p>
-      <div class="flex flex-wrap gap-2 pt-1">
-        <span class="badge badge-outline">OAuth 授权邮箱</span>
-        <span class="badge badge-outline">邮件同步</span>
-        <span class="badge badge-outline">邮件搜索</span>
-        <span class="badge badge-outline">规则筛选</span>
-      </div>
-    </div>
-    <div class="flex flex-wrap gap-2 lg:justify-end">
-      <NuxtLink
-        v-if="!isAuthenticated"
-        class="btn btn-primary"
-        to="/login"
-      >
-        登录或注册
-      </NuxtLink>
-      <NuxtLink
-        v-else-if="dashboardHref"
-        class="btn btn-outline"
-        :to="dashboardHref"
-      >
-        进入后台
-      </NuxtLink>
-    </div>
-  </section>
-
-  <BitsRevealPanel as="main" class="grid min-w-0 gap-4 xl:grid-cols-[minmax(520px,1fr)_minmax(340px,0.72fr)]">
+  <BitsRevealPanel as="main" class="flex-1 grid min-w-0 gap-4 xl:grid-cols-[minmax(520px,1fr)_minmax(340px,0.72fr)]">
     <InboxPanel
       v-model:selected-message-id="selectedMessageId"
       v-model:search="search"
