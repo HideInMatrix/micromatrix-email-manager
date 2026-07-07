@@ -43,6 +43,18 @@ export function getAdminRuntimeConfig(event: H3Event) {
   }
 }
 
+export function getConfiguredLoginEmails(event: H3Event) {
+  const config = getAdminRuntimeConfig(event)
+  const emails = [
+    config.email,
+    ...parseUserCredentials(config.userCredentials).map((user) => user.email)
+  ]
+
+  return Array.from(
+    new Set(emails.map((email) => normalizeEmail(email)).filter(Boolean))
+  )
+}
+
 export function isAdminConfigured(event: H3Event) {
   const config = getAdminRuntimeConfig(event)
   return Boolean(config.email && config.password)

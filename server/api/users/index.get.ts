@@ -1,36 +1,44 @@
 import { defineEventHandler } from 'h3'
 import type { PublicAppUser } from '../../../shared/types'
-import { getAdminRuntimeConfig, requireAdmin } from '../../utils/admin-auth'
+import {
+  getAdminRuntimeConfig,
+  getConfiguredLoginEmails,
+  requireAdmin
+} from '../../utils/admin-auth'
 import { prisma } from '../../utils/prisma'
 
 export default defineEventHandler(async (event) => {
-  const session = requireAdmin(event)
+  requireAdmin(event)
   const config = getAdminRuntimeConfig(event)
-  const sessionEmail = session.email || config.email
+  const configuredLoginEmails = getConfiguredLoginEmails(event)
 
-  await prisma.appUser.upsert({
-    where: { email: sessionEmail },
-    update: {
-      role: session.isAdmin ? 'admin' : 'user'
-    },
-    create: {
-      email: sessionEmail,
-      role: session.isAdmin ? 'admin' : 'user'
-    }
-  })
-
-  if (config.email && config.email !== sessionEmail) {
+  for (const email of configuredLoginEmails) {
+    const isConfiguredAdmin = email === normalizeEmail(config.email)
     await prisma.appUser.upsert({
-      where: { email: config.email },
-      update: { role: 'admin' },
+      where: { email },
+      update: isConfiguredAdmin ? { role: 'admin' } : {},
       create: {
-        email: config.email,
-        role: 'admin'
+        email,
+        role: isConfiguredAdmin ? 'admin' : 'user'
       }
     })
   }
 
   const users = await prisma.appUser.findMany({
+    where: {
+      OR: [
+        {
+          passwordHash: {
+            not: null
+          }
+        },
+        {
+          email: {
+            in: configuredLoginEmails
+          }
+        }
+      ]
+    },
     orderBy: { email: 'asc' }
   })
 
@@ -53,4 +61,8 @@ function toPublicUser(user: {
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString()
   }
+}
+
+function normalizeEmail(value?: string) {
+  return (value || '').trim().toLowerCase()
 }

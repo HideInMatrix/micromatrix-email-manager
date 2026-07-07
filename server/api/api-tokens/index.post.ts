@@ -2,6 +2,10 @@ import { randomUUID } from 'node:crypto'
 import { createError, defineEventHandler, readBody } from 'h3'
 import type { CreatedApiToken } from '../../../shared/types'
 import { requireUserAccess } from '../../utils/access'
+import {
+  getAdminRuntimeConfig,
+  getConfiguredLoginEmails
+} from '../../utils/admin-auth'
 import { toPublicApiToken } from '../../utils/api-tokens'
 import { createApiTokenValue, hashApiToken } from '../../utils/password'
 import { prisma } from '../../utils/prisma'
@@ -33,6 +37,10 @@ export default defineEventHandler(async (event): Promise<CreatedApiToken> => {
     })
   }
 
+  const config = getAdminRuntimeConfig(event)
+  const configuredLoginEmails = getConfiguredLoginEmails(event)
+  const isConfiguredLoginUser = configuredLoginEmails.includes(userEmail)
+  const isConfiguredAdmin = userEmail === normalizeEmail(config.email)
   const sessionUser = await prisma.appUser.upsert({
     where: { email: sessionEmail },
     update: {
@@ -44,14 +52,30 @@ export default defineEventHandler(async (event): Promise<CreatedApiToken> => {
     }
   })
 
-  const targetUser = userEmail === sessionEmail
+  let targetUser = userEmail === sessionEmail
     ? sessionUser
     : await prisma.appUser.findUnique({
         where: { email: userEmail }
       })
 
+  if (!targetUser && isConfiguredLoginUser) {
+    targetUser = await prisma.appUser.create({
+      data: {
+        email: userEmail,
+        role: isConfiguredAdmin ? 'admin' : 'user'
+      }
+    })
+  }
+
   if (!targetUser) {
     throw createError({ statusCode: 404, statusMessage: 'User not found' })
+  }
+
+  if (!isConfiguredLoginUser && !targetUser.passwordHash) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'API token can only be created for a login user account'
+    })
   }
 
   const token = createApiTokenValue()
