@@ -2,6 +2,7 @@ import { createError, type H3Event } from 'h3'
 import type {
   AppState,
   MailAccount,
+  MailMessage,
   MailProviderSummary,
   StoredOAuthToken
 } from '../../../shared/types'
@@ -143,7 +144,7 @@ export const gmailProvider: MailProvider = {
       limit: options.limit,
       query: options.query
     })
-    const messages = []
+    const messages: MailMessage[] = []
 
     for (const item of messageIds) {
       const rawMessage = await gmailGetMessage(accessToken, item.id)

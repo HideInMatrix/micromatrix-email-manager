@@ -117,7 +117,7 @@ export function filterEventsForUser(
 export function assertCanAccessAccount(
   access: UserAccess,
   account?: MailAccount
-) {
+): asserts account is MailAccount {
   if (!account || !canAccessAccount(access, account)) {
     throw createError({ statusCode: 404, statusMessage: 'Account not found' })
   }

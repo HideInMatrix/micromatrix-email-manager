@@ -253,8 +253,14 @@ export function upsertMessage(state: AppState, message: MailMessage) {
   )
 
   if (existingIndex >= 0) {
+    const existingMessage = state.messages[existingIndex]
+
+    if (!existingMessage) {
+      return
+    }
+
     state.messages[existingIndex] = {
-      ...state.messages[existingIndex],
+      ...existingMessage,
       ...message,
       updatedAt: new Date().toISOString()
     }

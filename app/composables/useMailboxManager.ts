@@ -65,9 +65,10 @@ export function useMailboxManager() {
   async function loadAccounts(options: LoadAccountsOptions = {}) {
     const selectFirst = options.selectFirst ?? true
     accounts.value = await $fetch<PublicMailAccount[]>('/api/accounts')
+    const firstAccount = accounts.value[0]
 
-    if (!selectedAccountId.value && selectFirst && accounts.value[0]) {
-      selectedAccountId.value = accounts.value[0].id
+    if (!selectedAccountId.value && selectFirst && firstAccount) {
+      selectedAccountId.value = firstAccount.id
     }
 
     if (
@@ -87,9 +88,10 @@ export function useMailboxManager() {
         matched: ruleMatchedOnly.value || undefined
       }
     })
+    const firstMessage = messages.value[0]
 
-    if (!selectedMessageId.value && messages.value[0]) {
-      selectedMessageId.value = messages.value[0].id
+    if (!selectedMessageId.value && firstMessage) {
+      selectedMessageId.value = firstMessage.id
     }
 
     if (

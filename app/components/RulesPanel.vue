@@ -53,11 +53,13 @@ const groupedRules = computed(() => {
 watch(
   () => props.providers,
   (providers) => {
+    const firstProvider = providers[0]
+
     if (
-      providers.length &&
+      firstProvider &&
       !providers.some((provider) => provider.id === ruleForm.provider)
     ) {
-      ruleForm.provider = providers[0].id
+      ruleForm.provider = firstProvider.id
     }
   },
   { immediate: true }

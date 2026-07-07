@@ -41,13 +41,15 @@ watch(
       return
     }
 
-    if (!form.userEmail && users[0]) {
-      form.userEmail = users[0].email
+    const firstUser = users[0]
+
+    if (!form.userEmail && firstUser) {
+      form.userEmail = firstUser.email
       return
     }
 
-    if (form.userEmail && users.length && !users.some((user) => user.email === form.userEmail)) {
-      form.userEmail = users[0].email
+    if (form.userEmail && firstUser && !users.some((user) => user.email === form.userEmail)) {
+      form.userEmail = firstUser.email
     }
   },
   { immediate: true }

@@ -1,6 +1,8 @@
 import { createError, defineEventHandler, readBody } from 'h3'
+import type { MailAccount, MailMessage } from '../../../shared/types'
 import { assertCanAccessAccount, requireUserAccess } from '../../utils/access'
 import { getProviderForAccount } from '../../utils/providers'
+import type { MailProvider } from '../../utils/providers/types'
 import { addEvent, readState, writeState } from '../../utils/storage'
 
 interface TrashMessageRequest {
@@ -23,7 +25,11 @@ export default defineEventHandler(async (event) => {
 
   const state = await readState()
   const seenKeys = new Set<string>()
-  const targets = []
+  const targets: Array<{
+    account: MailAccount
+    message: MailMessage
+    provider: MailProvider
+  }> = []
 
   for (const request of requests) {
     const id = request.id?.trim()

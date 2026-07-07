@@ -1,10 +1,18 @@
 import { createError, defineEventHandler, readBody } from 'h3'
+import type { MailProviderId } from '../../../shared/types'
 import {
   filterAccountsForUser,
   requireUserAccess
 } from '../../utils/access'
 import { getProviderForAccount } from '../../utils/providers'
 import { addEvent, readState, writeState } from '../../utils/storage'
+
+interface WatchResultItem {
+  accountId: string
+  provider: MailProviderId
+  email: string
+  providerData: Record<string, string | undefined>
+}
 
 export default defineEventHandler(async (event) => {
   const access = await requireUserAccess(event)
@@ -19,7 +27,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'No account selected' })
   }
 
-  const results = []
+  const results: WatchResultItem[] = []
 
   for (const account of accounts) {
     const provider = getProviderForAccount(account.provider)

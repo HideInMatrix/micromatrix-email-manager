@@ -19,6 +19,11 @@ export default defineEventHandler(async (event) => {
   }
 
   const message = state.messages[messageIndex]
+
+  if (!message) {
+    throw createError({ statusCode: 404, statusMessage: 'Message not found' })
+  }
+
   const account = state.accounts.find((item) => item.id === message.accountId)
 
   assertCanAccessAccount(access, account)
