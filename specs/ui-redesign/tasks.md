@@ -53,6 +53,7 @@
 - [x] 8. 统一输入框、密码可见性和删除确认弹框
   - 新增可复用的 daisyUI input field 组件，替换页面中的文本、邮箱、搜索和密钥输入框。
   - 新增密码/密钥输入组件，在登录密码、注册确认密码和 Client Secret 上提供眼睛按钮。
+  - 已创建 OAuth 配置中的 Client Secret 支持管理员通过眼睛按钮按需查看或隐藏。
   - 新增 daisyUI modal 确认组件，替换邮件删除、批量删除、邮箱账号删除、规则删除和 Token 撤销确认。
   - 运行项目构建并检查没有原生 `window.confirm` 残留。
   - Build result: `rtk pnpm run build` passed.

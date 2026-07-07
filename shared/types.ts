@@ -39,6 +39,12 @@ export interface PublicMailProviderConfig {
   updatedAt?: string
 }
 
+export interface RevealedProviderSecret {
+  provider: MailProviderId
+  clientSecret: string
+  clientSecretSet: boolean
+}
+
 export interface MailAccount {
   id: string
   ownerEmail?: string

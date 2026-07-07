@@ -2,6 +2,8 @@
 import {
   AlertTriangle,
   CheckCircle2,
+  Eye,
+  EyeOff,
   KeyRound,
   Radio,
   Save,
@@ -12,7 +14,8 @@ import type {
   MailProviderId,
   MailProviderSummary,
   PublicMailAccount,
-  PublicMailProviderConfig
+  PublicMailProviderConfig,
+  RevealedProviderSecret
 } from '../../shared/types'
 
 const props = defineProps<{
@@ -36,6 +39,9 @@ const emit = defineEmits<{
 }>()
 
 const selectedProviderId = ref<MailProviderId>('gmail')
+const revealedSecrets = reactive<Partial<Record<MailProviderId, string>>>({})
+const revealingSecrets = reactive<Partial<Record<MailProviderId, boolean>>>({})
+const secretErrors = reactive<Partial<Record<MailProviderId, string>>>({})
 const forms = reactive<
   Record<
     string,
@@ -137,6 +143,8 @@ function saveSelectedProviderConfig() {
 
   const form = forms[provider.id]
 
+  hideSavedClientSecret(provider.id)
+
   emit('saveConfig', {
     provider: provider.id,
     clientId: form.clientId,
@@ -144,6 +152,39 @@ function saveSelectedProviderConfig() {
     pubsubTopic: form.pubsubTopic,
     tenantId: form.tenantId
   })
+}
+
+function hideSavedClientSecret(providerId: MailProviderId) {
+  delete revealedSecrets[providerId]
+  delete secretErrors[providerId]
+}
+
+async function toggleSavedClientSecret(providerId: MailProviderId) {
+  if (revealedSecrets[providerId]) {
+    hideSavedClientSecret(providerId)
+    return
+  }
+
+  revealingSecrets[providerId] = true
+  delete secretErrors[providerId]
+
+  try {
+    const result = await $fetch<RevealedProviderSecret>(
+      `/api/provider-configs/${providerId}/secret`
+    )
+
+    if (result.clientSecretSet && result.clientSecret) {
+      revealedSecrets[providerId] = result.clientSecret
+      return
+    }
+
+    secretErrors[providerId] = '未保存 Client Secret'
+  } catch (caught) {
+    secretErrors[providerId] =
+      caught instanceof Error ? caught.message : '读取 Client Secret 失败'
+  } finally {
+    revealingSecrets[providerId] = false
+  }
 }
 
 function capabilityClass(active: boolean) {
@@ -298,9 +339,43 @@ function capabilityClass(active: boolean) {
                 <tr>
                   <td>Client Secret</td>
                   <td>
-                    <span class="badge badge-sm" :class="config?.clientSecretSet ? 'badge-success' : 'badge-warning'">
-                      {{ config?.clientSecretSet ? '已保存' : '未保存' }}
-                    </span>
+                    <div class="flex min-w-0 flex-wrap items-center gap-2">
+                      <code
+                        v-if="revealedSecrets[provider.id]"
+                        class="max-w-full break-all rounded bg-base-200 px-2 py-1 font-mono text-xs text-base-content"
+                      >
+                        {{ revealedSecrets[provider.id] }}
+                      </code>
+                      <span
+                        v-else
+                        class="badge badge-sm"
+                        :class="config?.clientSecretSet ? 'badge-success' : 'badge-warning'"
+                      >
+                        {{ config?.clientSecretSet ? '已保存' : '未保存' }}
+                      </span>
+                      <button
+                        v-if="config?.clientSecretSet"
+                        class="btn btn-ghost btn-xs btn-square"
+                        type="button"
+                        :title="revealedSecrets[provider.id] ? '隐藏 Client Secret' : '查看 Client Secret'"
+                        :aria-label="revealedSecrets[provider.id] ? '隐藏 Client Secret' : '查看 Client Secret'"
+                        :disabled="Boolean(revealingSecrets[provider.id])"
+                        @click="toggleSavedClientSecret(provider.id)"
+                      >
+                        <span
+                          v-if="revealingSecrets[provider.id]"
+                          class="loading loading-spinner loading-xs"
+                        />
+                        <EyeOff v-else-if="revealedSecrets[provider.id]" :size="14" />
+                        <Eye v-else :size="14" />
+                      </button>
+                    </div>
+                    <small
+                      v-if="secretErrors[provider.id]"
+                      class="mt-1 block text-error"
+                    >
+                      {{ secretErrors[provider.id] }}
+                    </small>
                   </td>
                 </tr>
                 <tr v-if="provider.id === 'gmail'">

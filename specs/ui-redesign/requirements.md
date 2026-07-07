@@ -69,6 +69,7 @@
 - 当 daisyUI 已有相同语义组件时，系统不应创建重复的本地 UI 组件。
 - 当页面展示文本、邮箱、搜索或密钥输入时，系统应统一使用 daisyUI input field 样式，而不是散落的裸输入框。
 - 当用户输入登录密码、注册确认密码或 Client Secret 时，系统应提供眼睛按钮用于显示或隐藏输入内容。
+- 当管理员查看已创建 OAuth 配置时，系统应在已保存的 Client Secret 对应位置提供眼睛按钮，用于按需查看或隐藏已保存的真实 Client Secret。
 - 当用户执行删除、移入垃圾箱或撤销 Token 等破坏性操作时，系统应使用 daisyUI modal 确认框，而不是浏览器原生 `window.confirm`。
 
 ### R7. 验证
