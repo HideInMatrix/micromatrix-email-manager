@@ -11,11 +11,13 @@ export default defineEventHandler(async (event) => {
     clientId?: string
     clientSecret?: string
     pubsubTopic?: string
+    tenantId?: string
   }>(event)
 
   return await saveProviderConfig(event, provider, {
     clientId: body.clientId,
     clientSecret: body.clientSecret?.trim() ? body.clientSecret : undefined,
-    pubsubTopic: body.pubsubTopic
+    pubsubTopic: body.pubsubTopic,
+    tenantId: body.tenantId
   })
 })

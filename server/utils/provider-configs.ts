@@ -12,6 +12,7 @@ export interface ProviderRuntimeConfig {
   clientId: string
   clientSecret: string
   pubsubTopic?: string
+  tenantId?: string
   updatedAt?: string
 }
 
@@ -20,6 +21,7 @@ interface ProviderConfigRow {
   clientId: string | null
   clientSecretCipher: string | null
   pubsubTopic: string | null
+  tenantId: string | null
   updatedAt: string | Date | null
 }
 
@@ -50,7 +52,7 @@ export async function readProviderConfig(
 ): Promise<ProviderRuntimeConfig> {
   await ensureProviderConfigTable()
   const rows = await prisma.$queryRawUnsafe<ProviderConfigRow[]>(
-    'SELECT provider, clientId, clientSecretCipher, pubsubTopic, updatedAt FROM ProviderConfig WHERE provider = ? LIMIT 1',
+    'SELECT provider, clientId, clientSecretCipher, pubsubTopic, tenantId, updatedAt FROM ProviderConfig WHERE provider = ? LIMIT 1',
     provider
   )
   const row = rows[0]
@@ -64,6 +66,7 @@ export async function readProviderConfig(
     clientId: row?.clientId || '',
     clientSecret,
     pubsubTopic: row?.pubsubTopic || undefined,
+    tenantId: row?.tenantId || undefined,
     updatedAt: toIso(row?.updatedAt)
   }
 }
@@ -75,6 +78,7 @@ export async function saveProviderConfig(
     clientId?: string
     clientSecret?: string
     pubsubTopic?: string
+    tenantId?: string
   }
 ) {
   await ensureProviderConfigTable()
@@ -88,17 +92,19 @@ export async function saveProviderConfig(
     : ''
 
   await prisma.$executeRawUnsafe(
-    `INSERT INTO ProviderConfig (provider, clientId, clientSecretCipher, pubsubTopic, createdAt, updatedAt)
-     VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `INSERT INTO ProviderConfig (provider, clientId, clientSecretCipher, pubsubTopic, tenantId, createdAt, updatedAt)
+     VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
      ON CONFLICT(provider) DO UPDATE SET
        clientId = excluded.clientId,
        clientSecretCipher = excluded.clientSecretCipher,
        pubsubTopic = excluded.pubsubTopic,
+       tenantId = excluded.tenantId,
        updatedAt = CURRENT_TIMESTAMP`,
     provider,
     input.clientId?.trim() || '',
     clientSecretCipher,
-    input.pubsubTopic?.trim() || null
+    input.pubsubTopic?.trim() || null,
+    input.tenantId?.trim() || null
   )
 
   return toPublicConfig(await readProviderConfig(event, provider))
@@ -117,6 +123,7 @@ export function toPublicConfig(
     clientId: config.clientId,
     clientSecretSet: Boolean(config.clientSecret),
     pubsubTopic: config.pubsubTopic,
+    tenantId: config.tenantId,
     updatedAt: config.updatedAt
   }
 }
@@ -129,10 +136,23 @@ async function ensureProviderConfigTable() {
         clientId TEXT NOT NULL DEFAULT '',
         clientSecretCipher TEXT NOT NULL DEFAULT '',
         pubsubTopic TEXT,
+        tenantId TEXT,
         createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
-    `).then(() => undefined)
+    `)
+      .then(async () => {
+        const columns = await prisma.$queryRawUnsafe<Array<{ name: string }>>(
+          'PRAGMA table_info(ProviderConfig)'
+        )
+
+        if (!columns.some((column) => column.name === 'tenantId')) {
+          await prisma.$executeRawUnsafe(
+            'ALTER TABLE ProviderConfig ADD COLUMN tenantId TEXT'
+          )
+        }
+      })
+      .then(() => undefined)
   }
 
   await tableReady

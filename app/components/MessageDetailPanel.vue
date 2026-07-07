@@ -16,7 +16,9 @@ const emit = defineEmits<{
 const message = toRef(props, 'message')
 const rules = toRef(props, 'rules')
 
-const canTrash = computed(() => message.value?.provider === 'gmail')
+const canTrash = computed(() =>
+  message.value ? ['gmail', 'outlook'].includes(message.value.provider) : false
+)
 const isTrashing = computed(() =>
   message.value
     ? props.busy === `trash-${message.value.accountId}-${message.value.id}`

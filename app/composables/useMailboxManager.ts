@@ -121,6 +121,7 @@ export function useMailboxManager() {
     clientId: string
     clientSecret?: string
     pubsubTopic?: string
+    tenantId?: string
   }) {
     await withBusy(`provider-config-${payload.provider}`, async () => {
       await $fetch(`/api/provider-configs/${payload.provider}`, {
@@ -128,7 +129,8 @@ export function useMailboxManager() {
         body: {
           clientId: payload.clientId,
           clientSecret: payload.clientSecret || undefined,
-          pubsubTopic: payload.pubsubTopic
+          pubsubTopic: payload.pubsubTopic,
+          tenantId: payload.tenantId
         }
       })
       notice.value = '配置已保存'

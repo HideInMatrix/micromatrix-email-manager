@@ -117,6 +117,7 @@ model ProviderConfig {
   clientId           String   @default("")
   clientSecretCipher String   @default("")
   pubsubTopic        String?
+  tenantId           String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }

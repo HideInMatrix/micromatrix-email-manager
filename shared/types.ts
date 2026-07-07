@@ -1,6 +1,6 @@
 export type AccountStatus = 'connected' | 'needs_reauth' | 'error'
 export type MailProviderId = 'gmail' | 'outlook'
-export type MailProviderConfigKey = 'clientId' | 'clientSecret' | 'pubsubTopic'
+export type MailProviderConfigKey = 'clientId' | 'clientSecret' | 'pubsubTopic' | 'tenantId'
 
 export interface MailProviderCapability {
   oauth: boolean
@@ -35,6 +35,7 @@ export interface PublicMailProviderConfig {
   clientId: string
   clientSecretSet: boolean
   pubsubTopic?: string
+  tenantId?: string
   updatedAt?: string
 }
 

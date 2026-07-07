@@ -59,6 +59,12 @@ function connectTitle(provider: MailProviderSummary) {
   return `连接 ${provider.name}`
 }
 
+function watchTitle(account: PublicMailAccount) {
+  return canWatch(account)
+    ? '启动 Watch'
+    : `${providerName(props.providers, account.provider)} 暂不支持 Watch 或尚未配置`
+}
+
 function accountStatusClass(status: PublicMailAccount['status']) {
   return {
     connected: 'badge-success',
@@ -83,7 +89,7 @@ function accountStatusClass(status: PublicMailAccount['status']) {
           class="btn btn-square btn-sm btn-outline"
           type="button"
           :disabled="!hasWatchableAccounts"
-          :title="hasWatchableAccounts ? '启动全部 Watch' : '先配置 Gmail Pub/Sub Topic'"
+          :title="hasWatchableAccounts ? '启动全部 Watch' : '当前没有可 Watch 的账号'"
           @click="emit('watch')"
         >
           <span v-if="busy === 'watch-all'" class="loading loading-spinner loading-xs" />
@@ -212,7 +218,7 @@ function accountStatusClass(status: PublicMailAccount['status']) {
                     class="btn btn-square btn-sm btn-ghost"
                     type="button"
                     :disabled="!canWatch(account)"
-                    :title="canWatch(account) ? '启动 Watch' : '先配置 Gmail Pub/Sub Topic'"
+                    :title="watchTitle(account)"
                     @click="emit('watch', account.id)"
                   >
                     <span v-if="busy === `watch-${account.id}`" class="loading loading-spinner loading-xs" />

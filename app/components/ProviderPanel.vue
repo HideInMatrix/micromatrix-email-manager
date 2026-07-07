@@ -30,6 +30,7 @@ const emit = defineEmits<{
       clientId: string
       clientSecret?: string
       pubsubTopic?: string
+      tenantId?: string
     }
   ]
 }>()
@@ -42,6 +43,7 @@ const forms = reactive<
       clientId: string
       clientSecret: string
       pubsubTopic: string
+      tenantId: string
     }
   >
 >({})
@@ -105,7 +107,8 @@ watch(
       forms[provider.id] = {
         clientId: config?.clientId || '',
         clientSecret: '',
-        pubsubTopic: config?.pubsubTopic || ''
+        pubsubTopic: config?.pubsubTopic || '',
+        tenantId: config?.tenantId || ''
       }
     }
   },
@@ -138,7 +141,8 @@ function saveSelectedProviderConfig() {
     provider: provider.id,
     clientId: form.clientId,
     clientSecret: form.clientSecret.trim() || undefined,
-    pubsubTopic: form.pubsubTopic
+    pubsubTopic: form.pubsubTopic,
+    tenantId: form.tenantId
   })
 }
 
@@ -248,6 +252,14 @@ function capabilityClass(active: boolean) {
             :placeholder="field.placeholder"
             autocomplete="off"
           >
+          <input
+            v-else-if="field.key === 'tenantId'"
+            v-model="forms[selectedProvider.id].tenantId"
+            class="input input-bordered w-full"
+            type="text"
+            :placeholder="field.placeholder"
+            autocomplete="off"
+          >
         </fieldset>
 
         <button
@@ -297,6 +309,10 @@ function capabilityClass(active: boolean) {
                 <tr v-if="provider.id === 'gmail'">
                   <td>Pub/Sub Topic</td>
                   <td class="max-w-0 truncate font-mono">{{ config?.pubsubTopic || '未配置' }}</td>
+                </tr>
+                <tr v-if="provider.id === 'outlook'">
+                  <td>Tenant ID</td>
+                  <td class="max-w-0 truncate font-mono">{{ config?.tenantId || 'common' }}</td>
                 </tr>
                 <tr>
                   <td>Redirect URI</td>
