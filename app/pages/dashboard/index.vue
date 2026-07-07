@@ -99,28 +99,26 @@ onMounted(refreshAll)
             <Activity :size="18" />
             后台状态
           </h2>
-          <div class="overflow-x-auto">
-            <table class="table table-sm">
-              <tbody>
-                <tr>
-                  <td>账号</td>
-                  <td class="text-right"><span class="badge badge-success">{{ status?.counts.accounts ?? 0 }}</span></td>
-                </tr>
-                <tr>
-                  <td>Token 加密</td>
-                  <td class="text-right">
-                    <span class="badge" :class="status?.configured.encryption ? 'badge-success' : 'badge-warning'">
-                      {{ status?.configured.encryption ? '强密钥' : '开发密钥' }}
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td>事件</td>
-                  <td class="text-right"><span class="badge badge-info">{{ status?.events.length ?? 0 }}</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <DaisyTable size="sm">
+            <tbody>
+              <tr>
+                <td>账号</td>
+                <td class="text-right"><span class="badge badge-success">{{ status?.counts.accounts ?? 0 }}</span></td>
+              </tr>
+              <tr>
+                <td>Token 加密</td>
+                <td class="text-right">
+                  <span class="badge" :class="status?.configured.encryption ? 'badge-success' : 'badge-warning'">
+                    {{ status?.configured.encryption ? '强密钥' : '开发密钥' }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td>事件</td>
+                <td class="text-right"><span class="badge badge-info">{{ status?.events.length ?? 0 }}</span></td>
+              </tr>
+            </tbody>
+          </DaisyTable>
         </div>
       </section>
 

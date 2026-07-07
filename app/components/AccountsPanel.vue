@@ -164,81 +164,79 @@ function accountStatusClass(status: PublicMailAccount['status']) {
         </div>
       </div>
 
-      <div v-if="accounts.length" class="overflow-x-auto">
-        <table class="table table-zebra">
-          <thead>
-            <tr>
-              <th>账号</th>
-              <th>服务商</th>
-              <th>状态</th>
-              <th class="text-right">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="account in accounts"
-              :key="account.id"
-              class="cursor-pointer"
-              :class="account.id === selectedAccountId ? 'bg-primary/10' : ''"
-              @click="emit('update:selectedAccountId', account.id)"
-            >
-              <td>
-                <div class="flex min-w-0 items-center gap-3">
-                  <div class="avatar">
-                    <div class="h-10 w-10 rounded-lg">
-                      <img v-if="account.picture" :src="account.picture" :alt="account.email">
-                      <span v-else class="flex h-full w-full items-center justify-center bg-base-100 text-base-content/60">
-                        <UserRound :size="17" />
-                      </span>
-                    </div>
+      <DaisyTable v-if="accounts.length" zebra>
+        <thead>
+          <tr>
+            <th>账号</th>
+            <th>服务商</th>
+            <th>状态</th>
+            <th class="text-right">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="account in accounts"
+            :key="account.id"
+            class="cursor-pointer"
+            :class="account.id === selectedAccountId ? 'bg-primary/10' : ''"
+            @click="emit('update:selectedAccountId', account.id)"
+          >
+            <td>
+              <div class="flex min-w-0 items-center gap-3">
+                <div class="avatar">
+                  <div class="h-10 w-10 rounded-lg">
+                    <img v-if="account.picture" :src="account.picture" :alt="account.email">
+                    <span v-else class="flex h-full w-full items-center justify-center bg-base-100 text-base-content/60">
+                      <UserRound :size="17" />
+                    </span>
                   </div>
-                  <span class="min-w-0">
-                    <strong class="block truncate text-sm">{{ account.name }}</strong>
-                    <small class="block truncate text-xs text-base-content/60">{{ account.email }}</small>
-                  </span>
                 </div>
-              </td>
-              <td>{{ providerName(providers, account.provider) }}</td>
-              <td>
-                <span class="badge badge-sm" :class="accountStatusClass(account.status)">
-                  {{ statusLabel(account.status) }}
+                <span class="min-w-0">
+                  <strong class="block truncate text-sm">{{ account.name }}</strong>
+                  <small class="block truncate text-xs text-base-content/60">{{ account.email }}</small>
                 </span>
-              </td>
-              <td>
-                <div class="flex justify-end gap-2" @click.stop>
-                  <button
-                    class="btn btn-square btn-sm btn-ghost"
-                    type="button"
-                    title="同步此账号"
-                    @click="emit('sync', account.id)"
-                  >
-                    <span v-if="busy === `sync-${account.id}`" class="loading loading-spinner loading-xs" />
-                    <RefreshCcw v-else :size="15" />
-                  </button>
-                  <button
-                    class="btn btn-square btn-sm btn-ghost"
-                    type="button"
-                    :disabled="!canWatch(account)"
-                    :title="watchTitle(account)"
-                    @click="emit('watch', account.id)"
-                  >
-                    <span v-if="busy === `watch-${account.id}`" class="loading loading-spinner loading-xs" />
-                    <Radio v-else :size="15" />
-                  </button>
-                  <button
-                    class="btn btn-square btn-sm btn-ghost text-error"
-                    type="button"
-                    title="删除账号"
-                    @click="emit('remove', account)"
-                  >
-                    <Trash2 :size="15" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              </div>
+            </td>
+            <td>{{ providerName(providers, account.provider) }}</td>
+            <td>
+              <span class="badge badge-sm" :class="accountStatusClass(account.status)">
+                {{ statusLabel(account.status) }}
+              </span>
+            </td>
+            <td>
+              <div class="flex justify-end gap-2" @click.stop>
+                <button
+                  class="btn btn-square btn-sm btn-ghost"
+                  type="button"
+                  title="同步此账号"
+                  @click="emit('sync', account.id)"
+                >
+                  <span v-if="busy === `sync-${account.id}`" class="loading loading-spinner loading-xs" />
+                  <RefreshCcw v-else :size="15" />
+                </button>
+                <button
+                  class="btn btn-square btn-sm btn-ghost"
+                  type="button"
+                  :disabled="!canWatch(account)"
+                  :title="watchTitle(account)"
+                  @click="emit('watch', account.id)"
+                >
+                  <span v-if="busy === `watch-${account.id}`" class="loading loading-spinner loading-xs" />
+                  <Radio v-else :size="15" />
+                </button>
+                <button
+                  class="btn btn-square btn-sm btn-ghost text-error"
+                  type="button"
+                  title="删除账号"
+                  @click="emit('remove', account)"
+                >
+                  <Trash2 :size="15" />
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </DaisyTable>
 
       <div v-else class="flex min-h-32 items-center justify-center gap-2 p-6 text-base-content/60">
         <KeyRound :size="22" />

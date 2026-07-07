@@ -18,24 +18,22 @@ defineProps<{
         </h2>
       </div>
 
-      <div v-if="events.length" class="overflow-x-auto">
-        <table class="table table-pin-rows table-zebra">
-          <thead>
-            <tr>
-              <th>类型</th>
-              <th>消息</th>
-              <th>时间</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="eventItem in events" :key="eventItem.id">
-              <td><span class="badge badge-outline badge-sm uppercase">{{ eventItem.type }}</span></td>
-              <td class="max-w-0 truncate">{{ eventItem.message }}</td>
-              <td class="whitespace-nowrap font-mono text-xs text-base-content/60">{{ formatDate(eventItem.createdAt) }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <DaisyTable v-if="events.length" zebra pin-rows>
+        <thead>
+          <tr>
+            <th>类型</th>
+            <th>消息</th>
+            <th class="w-px min-w-[6.25rem] whitespace-nowrap">时间</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="eventItem in events" :key="eventItem.id">
+            <td><span class="badge badge-outline badge-sm uppercase">{{ eventItem.type }}</span></td>
+            <td class="max-w-0 truncate">{{ eventItem.message }}</td>
+            <td class="w-px min-w-[6.25rem] whitespace-nowrap font-mono text-xs text-base-content/60">{{ formatDate(eventItem.createdAt) }}</td>
+          </tr>
+        </tbody>
+      </DaisyTable>
 
       <div v-else class="flex min-h-32 items-center justify-center gap-2 p-6 text-base-content/60">
         <Activity :size="22" />

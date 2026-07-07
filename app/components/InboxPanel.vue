@@ -205,72 +205,70 @@ function trashSelectedMessages() {
         </div>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="table table-pin-rows table-zebra">
-          <thead>
-            <tr>
-              <th class="w-10">
-                <input
-                  v-model="allVisibleSelected"
-                  class="checkbox checkbox-sm"
-                  type="checkbox"
-                  aria-label="选择当前邮件"
-                  :disabled="!messages.length || busy === 'trash-batch'"
-                  :indeterminate="hasPartiallySelected"
-                >
-              </th>
-              <th>主题</th>
-              <th>发件人</th>
-              <th>时间</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="message in messages"
-              :key="`${message.accountId}:${message.id}`"
-              class="cursor-pointer"
-              :class="{
-                'bg-primary/10': message.id === selectedMessageId,
-                'bg-base-300/60': isMessageSelected(message) && message.id !== selectedMessageId
-              }"
-              @click="emit('update:selectedMessageId', message.id)"
-            >
-              <td @click.stop>
-                <input
-                  class="checkbox checkbox-sm"
-                  type="checkbox"
-                  :aria-label="`选择 ${message.subject}`"
-                  :checked="isMessageSelected(message)"
-                  :disabled="busy === 'trash-batch'"
-                  @change="setMessageSelected(message, eventChecked($event))"
-                >
-              </td>
-              <td class="max-w-0">
-                <div class="flex min-w-0 items-start gap-2">
-                  <span v-if="message.unread" class="status status-primary mt-1.5" />
-                  <span class="min-w-0">
-                    <strong class="block truncate" :class="message.unread ? 'text-primary' : ''">
-                      {{ message.subject }}
-                    </strong>
-                    <small class="block truncate text-base-content/60">{{ message.snippet }}</small>
-                  </span>
-                </div>
-              </td>
-              <td class="max-w-0">
-                <span class="block truncate">{{ message.from }}</span>
-                <small class="block truncate text-base-content/60">{{ accountName(message.accountId) }}</small>
-              </td>
-              <td class="whitespace-nowrap font-mono text-xs text-base-content/60">
-                {{ formatDate(message.receivedAt) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <DaisyTable zebra pin-rows>
+        <thead>
+          <tr>
+            <th class="w-10">
+              <input
+                v-model="allVisibleSelected"
+                class="checkbox checkbox-sm"
+                type="checkbox"
+                aria-label="选择当前邮件"
+                :disabled="!messages.length || busy === 'trash-batch'"
+                :indeterminate="hasPartiallySelected"
+              >
+            </th>
+            <th>主题</th>
+            <th>发件人</th>
+            <th class="w-px min-w-[6.25rem] whitespace-nowrap">时间</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="message in messages"
+            :key="`${message.accountId}:${message.id}`"
+            class="cursor-pointer"
+            :class="{
+              'bg-primary/10': message.id === selectedMessageId,
+              'bg-base-300/60': isMessageSelected(message) && message.id !== selectedMessageId
+            }"
+            @click="emit('update:selectedMessageId', message.id)"
+          >
+            <td @click.stop>
+              <input
+                class="checkbox checkbox-sm"
+                type="checkbox"
+                :aria-label="`选择 ${message.subject}`"
+                :checked="isMessageSelected(message)"
+                :disabled="busy === 'trash-batch'"
+                @change="setMessageSelected(message, eventChecked($event))"
+              >
+            </td>
+            <td class="max-w-0">
+              <div class="flex min-w-0 items-start gap-2">
+                <span v-if="message.unread" class="status status-primary mt-1.5" />
+                <span class="min-w-0">
+                  <strong class="block truncate" :class="message.unread ? 'text-primary' : ''">
+                    {{ message.subject }}
+                  </strong>
+                  <small class="block truncate text-base-content/60">{{ message.snippet }}</small>
+                </span>
+              </div>
+            </td>
+            <td class="max-w-0">
+              <span class="block truncate">{{ message.from }}</span>
+              <small class="block truncate text-base-content/60">{{ accountName(message.accountId) }}</small>
+            </td>
+            <td class="w-px min-w-[6.25rem] whitespace-nowrap font-mono text-xs text-base-content/60">
+              {{ formatDate(message.receivedAt) }}
+            </td>
+          </tr>
+        </tbody>
+      </DaisyTable>
 
-        <div v-if="!messages.length" class="flex min-h-72 items-center justify-center gap-2 p-6 text-base-content/60">
-          <Inbox :size="24" />
-          <span>暂无邮件</span>
-        </div>
+      <div v-if="!messages.length" class="flex min-h-72 items-center justify-center gap-2 p-6 text-base-content/60">
+        <Inbox :size="24" />
+        <span>暂无邮件</span>
       </div>
     </div>
   </section>

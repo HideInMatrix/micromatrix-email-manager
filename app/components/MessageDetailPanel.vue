@@ -99,28 +99,26 @@ const plainBody = computed(() =>
       <template v-if="message">
         <div class="grid gap-4 px-5 pb-5">
           <h3 class="break-words text-lg font-bold">{{ message.subject }}</h3>
-          <div class="overflow-x-auto">
-            <table class="table table-sm">
-              <tbody>
-                <tr>
-                  <td>Provider</td>
-                  <td class="font-mono">{{ message.provider }}</td>
-                </tr>
-                <tr>
-                  <td>From</td>
-                  <td class="max-w-0 truncate font-mono">{{ message.from }}</td>
-                </tr>
-                <tr>
-                  <td>To</td>
-                  <td class="max-w-0 truncate font-mono">{{ message.to }}</td>
-                </tr>
-                <tr>
-                  <td>Date</td>
-                  <td class="font-mono">{{ formatDate(message.receivedAt) }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <DaisyTable size="sm">
+            <tbody>
+              <tr>
+                <td>Provider</td>
+                <td class="font-mono">{{ message.provider }}</td>
+              </tr>
+              <tr>
+                <td>From</td>
+                <td class="max-w-0 truncate font-mono">{{ message.from }}</td>
+              </tr>
+              <tr>
+                <td>To</td>
+                <td class="max-w-0 truncate font-mono">{{ message.to }}</td>
+              </tr>
+              <tr>
+                <td>Date</td>
+                <td class="font-mono">{{ formatDate(message.receivedAt) }}</td>
+              </tr>
+            </tbody>
+          </DaisyTable>
 
           <div class="flex flex-wrap gap-2">
             <span v-if="message.unread" class="badge badge-warning h-8 gap-1">

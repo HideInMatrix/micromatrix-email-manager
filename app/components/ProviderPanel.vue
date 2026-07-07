@@ -340,70 +340,68 @@ function capabilityClass(active: boolean) {
             </span>
           </div>
 
-          <div class="mt-3 overflow-x-auto">
-            <table class="table table-sm">
-              <tbody>
-                <tr>
-                  <td>Client ID</td>
-                  <td class="max-w-0 truncate font-mono">{{ config?.clientId || '未填写' }}</td>
-                </tr>
-                <tr>
-                  <td>Client Secret</td>
-                  <td>
-                    <div class="flex min-w-0 flex-wrap items-center gap-2">
-                      <code
-                        v-if="revealedSecrets[provider.id]"
-                        class="max-w-full break-all rounded bg-base-200 px-2 py-1 font-mono text-xs text-base-content"
-                      >
-                        {{ revealedSecrets[provider.id] }}
-                      </code>
-                      <span
-                        v-else
-                        class="badge badge-sm"
-                        :class="config?.clientSecretSet ? 'badge-success' : 'badge-warning'"
-                      >
-                        {{ config?.clientSecretSet ? '已保存' : '未保存' }}
-                      </span>
-                      <button
-                        v-if="config?.clientSecretSet"
-                        class="btn btn-ghost btn-xs btn-square"
-                        type="button"
-                        :title="revealedSecrets[provider.id] ? '隐藏 Client Secret' : '查看 Client Secret'"
-                        :aria-label="revealedSecrets[provider.id] ? '隐藏 Client Secret' : '查看 Client Secret'"
-                        :disabled="Boolean(revealingSecrets[provider.id])"
-                        @click="toggleSavedClientSecret(provider.id)"
-                      >
-                        <span
-                          v-if="revealingSecrets[provider.id]"
-                          class="loading loading-spinner loading-xs"
-                        />
-                        <EyeOff v-else-if="revealedSecrets[provider.id]" :size="14" />
-                        <Eye v-else :size="14" />
-                      </button>
-                    </div>
-                    <small
-                      v-if="secretErrors[provider.id]"
-                      class="mt-1 block text-error"
+          <DaisyTable size="sm" wrapper-class="mt-3 overflow-x-auto">
+            <tbody>
+              <tr>
+                <td>Client ID</td>
+                <td class="max-w-0 truncate font-mono">{{ config?.clientId || '未填写' }}</td>
+              </tr>
+              <tr>
+                <td>Client Secret</td>
+                <td>
+                  <div class="flex min-w-0 flex-wrap items-center gap-2">
+                    <code
+                      v-if="revealedSecrets[provider.id]"
+                      class="max-w-full break-all rounded bg-base-200 px-2 py-1 font-mono text-xs text-base-content"
                     >
-                      {{ secretErrors[provider.id] }}
-                    </small>
-                  </td>
-                </tr>
-                <tr v-if="provider.id === 'gmail'">
-                  <td>Pub/Sub Topic</td>
-                  <td class="max-w-0 truncate font-mono">{{ config?.pubsubTopic || '未配置' }}</td>
-                </tr>
-                <tr v-if="provider.id === 'outlook'">
-                  <td>Tenant ID</td>
-                  <td class="max-w-0 truncate font-mono">{{ config?.tenantId || 'common' }}</td>
-                </tr>
-                <tr>
-                  <td>Redirect URI</td>
-                  <td class="max-w-0 truncate font-mono">{{ provider.redirectUri }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                      {{ revealedSecrets[provider.id] }}
+                    </code>
+                    <span
+                      v-else
+                      class="badge badge-sm"
+                      :class="config?.clientSecretSet ? 'badge-success' : 'badge-warning'"
+                    >
+                      {{ config?.clientSecretSet ? '已保存' : '未保存' }}
+                    </span>
+                    <button
+                      v-if="config?.clientSecretSet"
+                      class="btn btn-ghost btn-xs btn-square"
+                      type="button"
+                      :title="revealedSecrets[provider.id] ? '隐藏 Client Secret' : '查看 Client Secret'"
+                      :aria-label="revealedSecrets[provider.id] ? '隐藏 Client Secret' : '查看 Client Secret'"
+                      :disabled="Boolean(revealingSecrets[provider.id])"
+                      @click="toggleSavedClientSecret(provider.id)"
+                    >
+                      <span
+                        v-if="revealingSecrets[provider.id]"
+                        class="loading loading-spinner loading-xs"
+                      />
+                      <EyeOff v-else-if="revealedSecrets[provider.id]" :size="14" />
+                      <Eye v-else :size="14" />
+                    </button>
+                  </div>
+                  <small
+                    v-if="secretErrors[provider.id]"
+                    class="mt-1 block text-error"
+                  >
+                    {{ secretErrors[provider.id] }}
+                  </small>
+                </td>
+              </tr>
+              <tr v-if="provider.id === 'gmail'">
+                <td>Pub/Sub Topic</td>
+                <td class="max-w-0 truncate font-mono">{{ config?.pubsubTopic || '未配置' }}</td>
+              </tr>
+              <tr v-if="provider.id === 'outlook'">
+                <td>Tenant ID</td>
+                <td class="max-w-0 truncate font-mono">{{ config?.tenantId || 'common' }}</td>
+              </tr>
+              <tr>
+                <td>Redirect URI</td>
+                <td class="max-w-0 truncate font-mono">{{ provider.redirectUri }}</td>
+              </tr>
+            </tbody>
+          </DaisyTable>
         </article>
       </div>
 
