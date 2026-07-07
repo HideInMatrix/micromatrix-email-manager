@@ -1,5 +1,5 @@
 <template>
-  <div data-theme="matrixmail">
+  <div data-theme="dracula">
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>

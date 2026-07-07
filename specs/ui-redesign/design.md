@@ -3,7 +3,7 @@
 ## Reusable Design Profile
 
 1. Aesthetic Direction: Industrial/utilitarian workspace。参考 `https://html-dashboard.daisyui.com/tools/export` 的 daisyUI 后台模板：左侧 drawer 导航、右侧白色主画布、顶部全局栏、页面面包屑工具栏、灰色功能卡片、高密度表格与表单。
-2. Color Palette: page gray `#F6F7FB`, surface white `#FFFFFF`, border gray `#E5E7EB`, text black `#111827`, primary blue `#2563EB`, accent teal `#14B8A6`, warning orange `#F59E0B`, error red `#DC2626`.
+2. Color Palette: use the built-in daisyUI `dracula` theme tokens. Prefer semantic classes such as `base-100`, `base-200`, `base-300`, `base-content`, `primary`, `accent`, `warning`, `error`, `success`, and `info` instead of hard-coded custom colors.
 3. Typography: `Outfit`-style sans for headings and controls, `Noto Sans SC` / `PingFang SC` / `Microsoft YaHei` for Chinese fallback, monospace only for dates, IDs, redirect URIs, counts, and technical values.
 4. Layout Strategy: Admin pages use a daisyUI `drawer lg:drawer-open` shell. The drawer side owns persistent navigation; the drawer content is a white application canvas with a rounded top-left corner and a border like the reference page. Admin pages then use a daisyUI `navbar`, `breadcrumbs`, and compact content sections. The front mailbox workspace does not use breadcrumb navigation.
 5. Reuse Boundary: This document is a UI design prompt. It describes reusable layout, component, copy, and visual-state rules only. Keep business analysis in `requirements.md` and executable work in `tasks.md`.
@@ -45,7 +45,7 @@ Application-specific Vue components may remain only when they bind business data
 The UI prompt stays inside the frontend surface:
 
 - `nuxt.config.ts` owns Tailwind v4's Vite plugin setup.
-- `app/assets/css/main.css` owns Tailwind/daisyUI imports, the `matrixmail` daisyUI theme, and small global base rules only.
+- `app/assets/css/main.css` owns Tailwind/daisyUI imports, the built-in `dracula` daisyUI theme selection, and small global base rules only.
 - `app/layouts/frontend.vue` owns the front mailbox workspace shell.
 - `app/layouts/dashboard.vue` owns the dashboard drawer shell and sidebar.
 - Pages select their shell with `definePageMeta({ layout: ... })` and must not duplicate layout wrappers.
@@ -65,9 +65,9 @@ The UI prompt stays inside the frontend surface:
 
 ## Theme Choices
 
-- `base-100` is the main white application canvas.
-- `base-200` is the sidebar/page gray and inner work card surface.
-- `base-300` is the border and divider color.
+- `base-100` is the main application canvas from the dracula theme.
+- `base-200` is the sidebar/page and inner work card surface from the dracula theme.
+- `base-300` is the border and divider color from the dracula theme.
 - `primary` is used for selected states and primary actions.
 - `accent` is reserved for secondary positive context.
 - `warning/error/success/info` map to standard admin statuses.
