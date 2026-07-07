@@ -214,7 +214,6 @@ function trashSelectedMessages() {
               </th>
               <th>主题</th>
               <th>发件人</th>
-              <th>标签</th>
               <th>时间</th>
             </tr>
           </thead>
@@ -253,17 +252,6 @@ function trashSelectedMessages() {
               <td class="max-w-0">
                 <span class="block truncate">{{ message.from }}</span>
                 <small class="block truncate text-base-content/60">{{ accountName(message.accountId) }}</small>
-              </td>
-              <td>
-                <span class="flex min-w-0 gap-1 overflow-hidden">
-                  <span
-                    v-for="label in message.labels.slice(0, 3)"
-                    :key="label"
-                    class="badge badge-outline badge-sm max-w-24 truncate"
-                  >
-                    {{ label.replace('local:', '') }}
-                  </span>
-                </span>
               </td>
               <td class="whitespace-nowrap font-mono text-xs text-base-content/60">
                 {{ formatDate(message.receivedAt) }}

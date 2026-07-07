@@ -84,7 +84,7 @@ function accountStatusClass(status: PublicMailAccount['status']) {
             <UserRound :size="18" />
             账号
           </h2>
-          <p class="mt-1 text-sm text-base-content/60">同步、监听和断开邮箱账号。</p>
+          <p class="mt-1 text-sm text-base-content/60">同步、监听和删除邮箱账号。</p>
         </div>
         <button
           class="btn btn-square btn-sm btn-outline"
@@ -228,7 +228,7 @@ function accountStatusClass(status: PublicMailAccount['status']) {
                   <button
                     class="btn btn-square btn-sm btn-ghost text-error"
                     type="button"
-                    title="断开账号"
+                    title="删除账号"
                     @click="emit('remove', account)"
                   >
                     <Trash2 :size="15" />

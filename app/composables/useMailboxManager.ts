@@ -178,6 +178,7 @@ export function useMailboxManager() {
       await $fetch(`/api/accounts/${account.id}`, { method: 'DELETE' })
       selectedAccountId.value = ''
       selectedMessageId.value = ''
+      notice.value = '邮箱账号已删除'
       await refreshAll()
     })
   }

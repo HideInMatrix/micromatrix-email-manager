@@ -6,7 +6,7 @@
 2. Color Palette: page gray `#F6F7FB`, surface white `#FFFFFF`, border gray `#E5E7EB`, text black `#111827`, primary blue `#2563EB`, accent teal `#14B8A6`, warning orange `#F59E0B`, error red `#DC2626`.
 3. Typography: `Outfit`-style sans for headings and controls, `Noto Sans SC` / `PingFang SC` / `Microsoft YaHei` for Chinese fallback, monospace only for dates, IDs, redirect URIs, counts, and technical values.
 4. Layout Strategy: Admin pages use a daisyUI `drawer lg:drawer-open` shell. The drawer side owns persistent navigation; the drawer content is a white application canvas with a rounded top-left corner and a border like the reference page. Admin pages then use a daisyUI `navbar`, `breadcrumbs`, and compact content sections. The front mailbox workspace does not use breadcrumb navigation.
-5. Reuse Boundary: This document describes reusable layout, component, and interaction rules only. Do not include one-off product mission statements or deployment goals in this design profile.
+5. Reuse Boundary: This document is a UI design prompt. It describes reusable layout, component, copy, and visual-state rules only. Keep business analysis in `requirements.md` and executable work in `tasks.md`.
 
 ## Reference Page Summary
 
@@ -39,28 +39,28 @@ Before creating or restyling UI, check whether daisyUI already provides the comp
 
 Application-specific Vue components may remain only when they bind business data or emit domain actions, such as `InboxPanel`, `ProviderPanel`, or `AccountsPanel`. They must compose daisyUI primitives instead of recreating generic UI controls.
 
-## Architecture
+## UI Composition
 
-The redesign stays inside the frontend surface:
+The UI prompt stays inside the frontend surface:
 
 - `nuxt.config.ts` owns Tailwind v4's Vite plugin setup.
 - `app/assets/css/main.css` owns Tailwind/daisyUI imports, the `matrixmail` daisyUI theme, and small global base rules only.
 - `app/layouts/frontend.vue` owns the front mailbox workspace shell.
-- `app/layouts/dashboard.vue` owns the authenticated admin drawer shell and sidebar.
+- `app/layouts/dashboard.vue` owns the dashboard drawer shell and sidebar.
 - Pages select their shell with `definePageMeta({ layout: ... })` and must not duplicate layout wrappers.
 - Component and page content use Tailwind v4 utilities plus daisyUI component classes directly in Vue templates.
-- Existing pages keep their data-loading and mutation logic from `useMailboxManager`.
-- Existing panel components keep props/emits so backend/API behavior remains unchanged.
+- Existing panel components may remain when they provide domain-specific presentation.
 - `app/components/bits/*` may remain as optional local animation primitives, but the primary layout must not depend on custom visual effects.
 
-## Surface Boundaries
+## Page Surfaces
 
 - Front workspace `/`: a mailbox work surface, not an admin page. It must not use the admin sidebar or breadcrumb navigation, and it should expose backend access only as a deliberate top-level action.
-- Admin pages `/dashboard/*`: authenticated management surfaces. When the user is not signed in, these routes redirect to `/login` through the existing route middleware.
-- Admin sidebar: contains only admin management routes. Do not include the front workspace or other non-admin entry points in the left menu.
+- Admin pages `/dashboard/*`: management surfaces using the dashboard drawer shell.
+- Admin sidebar: contains management routes only. Do not include the front workspace or other non-admin entry points in the left menu.
 - Login `/login`: a single-purpose login form with `layout: false`. Do not add secondary product explanation, access manifesto, or extra decorative panels.
-- OAuth configuration `/dashboard/config`: creates and maintains provider OAuth settings only.
-- Mail accounts `/dashboard/accounts`: connects Gmail/Outlook accounts after the corresponding OAuth provider configuration is complete.
+- OAuth configuration `/dashboard/config`: uses a provider setup form and saved provider cards.
+- Mail accounts `/dashboard/accounts`: uses provider action panels and a connected-account table/list.
+- API tokens `/dashboard/tokens`: uses a compact creation form, one-time token reveal alert, and token list.
 
 ## Theme Choices
 
@@ -77,17 +77,18 @@ The redesign stays inside the frontend surface:
 - Login: use a single compact daisyUI `card` login form. Preserve disabled login behavior and credential guidance; do not add secondary explanatory panels on the login screen.
 - Mailbox workspace `/`: front workspace page. The main content prioritizes `InboxPanel` table and sticky `MessageDetailPanel`; admin-only wording and breadcrumb navigation are avoided.
 - Dashboard overview `/dashboard`: use `stats` for counts, `card` for health/config summaries, and `EventsPanel` for recent events.
-- Accounts `/dashboard/accounts`: manage connected accounts and expose provider connect actions. Show Gmail/Outlook connection options here, disabled until that provider's OAuth configuration is complete.
-- Config `/dashboard/config`: use a create-first OAuth setup flow. Step 1 selects the mailbox type, Step 2 shows only fields required by that provider, and saved configurations are displayed as provider cards.
+- Accounts `/dashboard/accounts`: use provider action cards above a connected-account table/list. Disabled actions use daisyUI disabled button states and short inline hints.
+- Config `/dashboard/config`: use a stepped setup layout. Step 1 selects the mailbox type, Step 2 shows provider-specific fields, and saved configurations are displayed as provider cards.
 - Events `/dashboard/events`: use a dense daisyUI table/timeline-like event log inside a card.
 - Rules: local mail rules are created per provider type. The rule form starts with a provider selector, and rule lists are grouped by provider.
+- Tokens `/dashboard/tokens`: expose a compact token creation form and token list. One-time token values use an alert-style reveal area with copy action.
 
-## Data, API, And Security
+## Copy And State Treatment
 
-- OAuth redirect logic, token encryption, and auth session semantics are not changed by the UI redesign.
-- Admin route middleware remains responsible for redirecting unauthenticated `/dashboard/*` requests to `/login`.
-- Provider redirect URI display remains visible on the config page.
-- Automation rules include a provider type so Gmail and Outlook rules can be created, displayed, and applied independently.
+- Technical values such as redirect URIs, token prefixes, IDs, and email addresses use monospace text when displayed.
+- Empty states use daisyUI `alert` or muted card content with one clear action.
+- Disabled states use daisyUI disabled styles plus short helper text near the control.
+- Success, warning, and error states use daisyUI semantic colors instead of custom badges.
 
 ## Accessibility And Responsiveness
 
@@ -100,8 +101,6 @@ The redesign stays inside the frontend surface:
 - Avoid nested cards. Cards can contain form groups, tables, stats, and lists, but not other decorative cards.
 - Use daisyUI `loading` instead of custom spinner UI when a loading indicator is needed.
 
-## Verification
+## Visual Verification
 
-- Static check: run the project build after implementation.
-- Runtime check: run the Nuxt dev server and smoke-test `/login`, `/`, `/dashboard`, `/dashboard/accounts`, `/dashboard/config`, and `/dashboard/events` when local credentials/session allow.
 - Visual check: inspect desktop and mobile widths for overlapping controls, broken tables, unread/selected states, and empty states.

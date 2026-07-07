@@ -2,6 +2,7 @@
 
 - [x] 1. 更新需求与设计边界
   - 去掉设计文档中的一次性目的声明。
+  - 明确 `design.md` 只作为 UI 设计稿提示词，不承载业务逻辑、权限模型或接口语义。
   - 明确 `/` 是前台邮件工作台，`/dashboard/*` 是后台管理页。
   - 使用 Nuxt layout 区分前台、后台和登录页面外壳。
   - 后台左侧菜单只展示后台管理路由，不展示首页/邮件工作台。
@@ -40,3 +41,11 @@
   - Database result: `rtk pnpm run db:push` synced `AutomationRule.provider`.
   - Runtime result: preview on `http://127.0.0.1:4199` returned 200 for `/`, `/login`, `/api/status`, `/api/rules`; protected dashboard routes returned 302 to `/login?redirect=...`.
   - _Requirement: R7_
+
+- [ ] 7. 修正 API Token 身份模型
+  - 在 Token 页面和文案中明确 Token 归属是用户账号，不是 Gmail / Outlook 邮箱账号。
+  - 普通用户创建 Token 时固定绑定当前登录用户账号，不展示邮箱账号选择。
+  - 管理员代用户创建 Token 时选择目标用户账号，不选择邮箱账号。
+  - 对外接口用 Bearer Token 解析用户身份，再按 `accountId`、`recipientEmail` 或 `to` 指定目标邮箱账号或收件邮箱过滤。
+  - 后端校验请求指定的邮箱账号必须属于该 Token 用户可访问范围，无权限时拒绝请求。
+  - _Requirement: R8_

@@ -50,7 +50,7 @@ onMounted(async () => {
 })
 
 async function confirmRemoveAccount(account: PublicMailAccount) {
-  if (!window.confirm(`断开 ${account.email}？`)) {
+  if (!window.confirm(`删除 ${account.email}？本地缓存邮件也会一并删除。`)) {
     return
   }
 
@@ -68,7 +68,7 @@ async function confirmRemoveAccount(account: PublicMailAccount) {
           <li><h2>Accounts</h2></li>
         </ul>
       </div>
-      <p class="text-sm text-base-content/60">管理已授权邮箱，执行同步、监听和断开操作。</p>
+      <p class="text-sm text-base-content/60">管理已授权邮箱，执行同步、监听和删除操作。</p>
     </div>
     <div class="flex shrink-0 flex-wrap items-center gap-2">
       <button class="btn btn-sm btn-ghost max-sm:btn-square" type="button" title="刷新" @click="refreshAll">
