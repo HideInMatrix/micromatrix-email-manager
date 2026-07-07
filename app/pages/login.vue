@@ -151,30 +151,29 @@ async function redirectAfterLogin(isAdmin: boolean) {
           @close="error = ''"
         />
 
-        <fieldset class="fieldset p-0">
-          <legend class="fieldset-legend">邮箱</legend>
-          <input v-model="email" class="input input-bordered min-w-0 w-full" type="email" autocomplete="username">
-        </fieldset>
+        <InputField
+          v-model="email"
+          label="邮箱"
+          type="email"
+          autocomplete="username"
+        />
 
-        <fieldset class="fieldset p-0">
-          <legend class="fieldset-legend">密码</legend>
-          <input
-            v-model="password"
-            class="input input-bordered min-w-0 w-full"
-            type="password"
-            :autocomplete="mode === 'login' ? 'current-password' : 'new-password'"
-          >
-        </fieldset>
+        <SecretInputField
+          v-model="password"
+          label="密码"
+          :autocomplete="mode === 'login' ? 'current-password' : 'new-password'"
+          reveal-label="显示密码"
+          hide-label="隐藏密码"
+        />
 
-        <fieldset v-if="mode === 'register'" class="fieldset p-0">
-          <legend class="fieldset-legend">确认密码</legend>
-          <input
-            v-model="passwordConfirm"
-            class="input input-bordered min-w-0 w-full"
-            type="password"
-            autocomplete="new-password"
-          >
-        </fieldset>
+        <SecretInputField
+          v-if="mode === 'register'"
+          v-model="passwordConfirm"
+          label="确认密码"
+          autocomplete="new-password"
+          reveal-label="显示确认密码"
+          hide-label="隐藏确认密码"
+        />
 
         <button
           class="btn btn-primary w-full"

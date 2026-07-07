@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { RefreshCcw } from 'lucide-vue-next'
+import type { AutomationRule } from '../../../shared/types'
 
 const manager = useMailboxManager()
 
@@ -16,6 +17,7 @@ const {
   toggleRule,
   deleteRule
 } = manager
+const pendingDeleteRule = ref<AutomationRule>()
 
 useHead({
   title: '规则 · micromatrix-email-manager'
@@ -33,6 +35,21 @@ async function refreshRulesPage() {
 }
 
 onMounted(refreshRulesPage)
+
+function confirmDeleteRule(rule: AutomationRule) {
+  pendingDeleteRule.value = rule
+}
+
+async function deletePendingRule() {
+  const rule = pendingDeleteRule.value
+
+  if (!rule) {
+    return
+  }
+
+  await deleteRule(rule)
+  pendingDeleteRule.value = undefined
+}
 </script>
 
 <template>
@@ -80,7 +97,17 @@ onMounted(refreshRulesPage)
       :busy="busy"
       @save="saveRule"
       @toggle="toggleRule"
-      @delete="deleteRule"
+      @delete="confirmDeleteRule"
     />
   </BitsRevealPanel>
+
+  <ConfirmModal
+    :open="Boolean(pendingDeleteRule)"
+    title="删除规则？"
+    :message="pendingDeleteRule ? `删除规则「${pendingDeleteRule.name}」后将不再自动处理匹配邮件。` : ''"
+    confirm-label="删除规则"
+    :busy="pendingDeleteRule ? busy === `delete-rule-${pendingDeleteRule.id}` : false"
+    @close="pendingDeleteRule = undefined"
+    @confirm="deletePendingRule"
+  />
 </template>

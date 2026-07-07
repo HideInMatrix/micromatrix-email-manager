@@ -49,3 +49,12 @@
   - 对外接口用 Bearer Token 解析用户身份，再按 `accountId`、`recipientEmail` 或 `to` 指定目标邮箱账号或收件邮箱过滤。
   - 后端校验请求指定的邮箱账号必须属于该 Token 用户可访问范围，无权限时拒绝请求。
   - _Requirement: R8_
+
+- [x] 8. 统一输入框、密码可见性和删除确认弹框
+  - 新增可复用的 daisyUI input field 组件，替换页面中的文本、邮箱、搜索和密钥输入框。
+  - 新增密码/密钥输入组件，在登录密码、注册确认密码和 Client Secret 上提供眼睛按钮。
+  - 新增 daisyUI modal 确认组件，替换邮件删除、批量删除、邮箱账号删除、规则删除和 Token 撤销确认。
+  - 运行项目构建并检查没有原生 `window.confirm` 残留。
+  - Build result: `rtk pnpm run build` passed.
+  - Search result: no `window.confirm` or bare text/email/search/password inputs remain outside the reusable input components and checkbox/drawer controls.
+  - _Requirement: R6, R7_

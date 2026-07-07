@@ -34,6 +34,7 @@ Before creating or restyling UI, check whether daisyUI already provides the comp
 - Data lists: use `table`, `table-zebra`, `table-pin-rows`, `overflow-x-auto`.
 - Forms: use `fieldset`, `fieldset-legend`, `input`, `select`, `checkbox`, `toggle`, `label`.
 - Status: use `alert`, `badge`, `status`, `loading`.
+- Confirmation: use `modal`, `modal-box`, `modal-action`, and `modal-backdrop` for destructive confirmation dialogs.
 - Process indicators: use `steps`, `step`.
 - Destructive/secondary actions: use daisyUI button variants such as `btn-error`, `btn-outline`, `btn-ghost`, `btn-square`, `btn-sm`.
 
@@ -85,6 +86,10 @@ The UI prompt stays inside the frontend surface:
 
 ## Copy And State Treatment
 
+- Text, email, search, and secret form controls use daisyUI `input` field styling consistently instead of ad-hoc bare inputs.
+- Password and secret inputs include a small ghost eye button inside the input field to switch between hidden and visible text.
+- Client Secret uses the same reveal/hide treatment as password fields while administrators are entering the value.
+- Destructive confirmations use daisyUI modal dialogs with concise title, explanatory copy, cancel button, and semantic destructive confirm button.
 - Technical values such as redirect URIs, token prefixes, IDs, and email addresses use monospace text when displayed.
 - Empty states use daisyUI `alert` or muted card content with one clear action.
 - Disabled states use daisyUI disabled styles plus short helper text near the control.

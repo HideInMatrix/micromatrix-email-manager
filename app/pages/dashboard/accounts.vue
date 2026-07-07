@@ -32,6 +32,7 @@ const {
   startWatch,
   removeAccount
 } = manager
+const pendingRemoveAccount = ref<PublicMailAccount>()
 
 useHead({
   title: '账号 · micromatrix-email-manager'
@@ -50,11 +51,18 @@ onMounted(async () => {
 })
 
 async function confirmRemoveAccount(account: PublicMailAccount) {
-  if (!window.confirm(`删除 ${account.email}？本地缓存邮件也会一并删除。`)) {
+  pendingRemoveAccount.value = account
+}
+
+async function removePendingAccount() {
+  const account = pendingRemoveAccount.value
+
+  if (!account) {
     return
   }
 
   await removeAccount(account)
+  pendingRemoveAccount.value = undefined
 }
 </script>
 
@@ -110,4 +118,14 @@ async function confirmRemoveAccount(account: PublicMailAccount) {
       @remove="confirmRemoveAccount"
     />
   </BitsRevealPanel>
+
+  <ConfirmModal
+    :open="Boolean(pendingRemoveAccount)"
+    title="删除邮箱账号？"
+    :message="pendingRemoveAccount ? `删除 ${pendingRemoveAccount.email}？本地缓存邮件也会一并删除。` : ''"
+    confirm-label="删除账号"
+    :busy="pendingRemoveAccount ? busy === `delete-${pendingRemoveAccount.id}` : false"
+    @close="pendingRemoveAccount = undefined"
+    @confirm="removePendingAccount"
+  />
 </template>

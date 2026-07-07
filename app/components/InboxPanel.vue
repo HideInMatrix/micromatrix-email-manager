@@ -191,10 +191,17 @@ function trashSelectedMessages() {
             </button>
           </div>
 
-          <label class="input input-bordered input-sm flex min-w-[14.5rem] items-center gap-2">
-            <Search :size="15" />
-            <input v-model="searchModel" class="min-w-0 grow" type="search" placeholder="搜索邮件">
-          </label>
+          <InputField
+            v-model="searchModel"
+            type="search"
+            input-size="sm"
+            field-class="min-w-[14.5rem]"
+            placeholder="搜索邮件"
+          >
+            <template #prefix>
+              <Search :size="15" />
+            </template>
+          </InputField>
         </div>
       </div>
 

@@ -115,19 +115,20 @@ async function copyToken() {
         </fieldset>
         <fieldset v-else class="fieldset p-0">
           <legend class="fieldset-legend">用户账号</legend>
-          <input
-            class="input input-bordered w-full"
+          <InputField
+            :model-value="currentUserEmail"
             type="email"
-            :value="currentUserEmail"
             disabled
             placeholder="当前登录用户"
-          >
+          />
         </fieldset>
 
-        <fieldset class="fieldset p-0">
-          <legend class="fieldset-legend">名称</legend>
-          <input v-model="form.name" class="input input-bordered w-full" type="text" placeholder="例如：CRM 同步脚本">
-        </fieldset>
+        <InputField
+          v-model="form.name"
+          label="名称"
+          type="text"
+          placeholder="例如：CRM 同步脚本"
+        />
 
         <button
           class="btn btn-primary w-full"

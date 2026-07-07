@@ -228,38 +228,35 @@ function capabilityClass(active: boolean) {
               已保存
             </small>
           </legend>
-          <input
+          <InputField
             v-if="field.key === 'clientId'"
             v-model="forms[selectedProvider.id].clientId"
-            class="input input-bordered w-full"
             type="text"
             :placeholder="field.placeholder"
             autocomplete="off"
-          >
-          <input
+          />
+          <SecretInputField
             v-else-if="field.key === 'clientSecret'"
             v-model="forms[selectedProvider.id].clientSecret"
-            class="input input-bordered w-full"
-            type="password"
             :placeholder="field.placeholder"
             autocomplete="new-password"
-          >
-          <input
+            reveal-label="显示 Client Secret"
+            hide-label="隐藏 Client Secret"
+          />
+          <InputField
             v-else-if="field.key === 'pubsubTopic'"
             v-model="forms[selectedProvider.id].pubsubTopic"
-            class="input input-bordered w-full"
             type="text"
             :placeholder="field.placeholder"
             autocomplete="off"
-          >
-          <input
+          />
+          <InputField
             v-else-if="field.key === 'tenantId'"
             v-model="forms[selectedProvider.id].tenantId"
-            class="input input-bordered w-full"
             type="text"
             :placeholder="field.placeholder"
             autocomplete="off"
-          >
+          />
         </fieldset>
 
         <button

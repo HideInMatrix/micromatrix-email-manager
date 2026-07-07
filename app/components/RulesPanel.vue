@@ -140,11 +140,11 @@ function saveRule() {
 
         <fieldset class="fieldset p-0">
           <legend class="fieldset-legend">匹配条件</legend>
-          <input v-model="ruleForm.name" class="input input-bordered w-full" type="text" placeholder="规则名称">
-          <input v-model="ruleForm.from" class="input input-bordered w-full" type="text" placeholder="发件人包含">
-          <input v-model="ruleForm.subject" class="input input-bordered w-full" type="text" placeholder="主题包含">
-          <input v-model="ruleForm.contains" class="input input-bordered w-full" type="text" placeholder="正文包含">
-          <input v-model="ruleForm.hasLabel" class="input input-bordered w-full" type="text" placeholder="标签包含">
+          <InputField v-model="ruleForm.name" type="text" placeholder="规则名称" />
+          <InputField v-model="ruleForm.from" type="text" placeholder="发件人包含" />
+          <InputField v-model="ruleForm.subject" type="text" placeholder="主题包含" />
+          <InputField v-model="ruleForm.contains" type="text" placeholder="正文包含" />
+          <InputField v-model="ruleForm.hasLabel" type="text" placeholder="标签包含" />
         </fieldset>
 
         <fieldset class="fieldset p-0">
@@ -159,7 +159,7 @@ function saveRule() {
               归档
             </label>
           </div>
-          <input v-model="ruleForm.addLabel" class="input input-bordered w-full" type="text" placeholder="添加本地标签">
+          <InputField v-model="ruleForm.addLabel" type="text" placeholder="添加本地标签" />
         </fieldset>
       </form>
 

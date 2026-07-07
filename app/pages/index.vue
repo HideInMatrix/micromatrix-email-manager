@@ -31,6 +31,8 @@ const {
   trashMessages
 } = manager
 const isAuthenticated = computed(() => Boolean(session.value?.authenticated))
+const pendingTrashMessage = ref<MailMessage>()
+const pendingTrashMessages = ref<MailMessage[]>([])
 const dashboardHref = computed(() => {
   if (!session.value?.authenticated) {
     return undefined
@@ -64,11 +66,7 @@ watch([search, unreadOnly, ruleMatchedOnly], async () => {
 })
 
 async function confirmTrashMessage(message: MailMessage) {
-  if (!window.confirm(`将「${message.subject}」移入垃圾箱？`)) {
-    return
-  }
-
-  await trashMessage(message)
+  pendingTrashMessage.value = message
 }
 
 async function confirmTrashMessages(messages: MailMessage[]) {
@@ -76,11 +74,27 @@ async function confirmTrashMessages(messages: MailMessage[]) {
     return
   }
 
-  if (!window.confirm(`将选中的 ${messages.length} 封邮件移入垃圾箱？`)) {
+  pendingTrashMessages.value = messages
+}
+
+async function trashPendingMessage() {
+  const message = pendingTrashMessage.value
+
+  if (!message) {
     return
   }
 
-  await trashMessages(messages)
+  await trashMessage(message)
+  pendingTrashMessage.value = undefined
+}
+
+async function trashPendingMessages() {
+  if (!pendingTrashMessages.value.length) {
+    return
+  }
+
+  await trashMessages(pendingTrashMessages.value)
+  pendingTrashMessages.value = []
 }
 
 function openMessage(messageId: string) {
@@ -144,4 +158,24 @@ function openMessage(messageId: string) {
       @trash="confirmTrashMessage"
     />
   </BitsRevealPanel>
+
+  <ConfirmModal
+    :open="Boolean(pendingTrashMessage)"
+    title="移入垃圾箱？"
+    :message="pendingTrashMessage ? `将「${pendingTrashMessage.subject}」移入垃圾箱。` : ''"
+    confirm-label="移入垃圾箱"
+    :busy="pendingTrashMessage ? busy === `trash-${pendingTrashMessage.accountId}-${pendingTrashMessage.id}` : false"
+    @close="pendingTrashMessage = undefined"
+    @confirm="trashPendingMessage"
+  />
+
+  <ConfirmModal
+    :open="pendingTrashMessages.length > 0"
+    title="批量移入垃圾箱？"
+    :message="`将选中的 ${pendingTrashMessages.length} 封邮件移入垃圾箱。`"
+    confirm-label="移入垃圾箱"
+    :busy="busy === 'trash-batch'"
+    @close="pendingTrashMessages = []"
+    @confirm="trashPendingMessages"
+  />
 </template>

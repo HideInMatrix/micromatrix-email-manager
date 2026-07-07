@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { RefreshCcw } from 'lucide-vue-next'
+import type { PublicApiToken } from '../../../shared/types'
 
 const manager = useMailboxManager()
 const headers = import.meta.server ? useRequestHeaders(['cookie']) : undefined
@@ -32,6 +33,7 @@ const {
 
 const currentUserEmail = computed(() => session.value?.email || '')
 const canManageUsers = computed(() => Boolean(session.value?.isAdmin))
+const pendingRevokeToken = ref<PublicApiToken>()
 
 useHead({
   title: 'API Token · micromatrix-email-manager'
@@ -59,6 +61,21 @@ async function refreshTokenPage() {
 }
 
 onMounted(refreshTokenPage)
+
+function confirmRevokeToken(token: PublicApiToken) {
+  pendingRevokeToken.value = token
+}
+
+async function revokePendingToken() {
+  const token = pendingRevokeToken.value
+
+  if (!token) {
+    return
+  }
+
+  await revokeApiToken(token)
+  pendingRevokeToken.value = undefined
+}
 </script>
 
 <template>
@@ -104,7 +121,17 @@ onMounted(refreshTokenPage)
       :current-user-email="currentUserEmail"
       :can-manage-users="canManageUsers"
       @create="createApiToken"
-      @revoke="revokeApiToken"
+      @revoke="confirmRevokeToken"
     />
   </BitsRevealPanel>
+
+  <ConfirmModal
+    :open="Boolean(pendingRevokeToken)"
+    title="撤销 API Token？"
+    :message="pendingRevokeToken ? `撤销「${pendingRevokeToken.name || '未命名 Token'}」后，使用该 Token 的外部请求会立即失效。` : ''"
+    confirm-label="撤销 Token"
+    :busy="pendingRevokeToken ? busy === `api-token-delete-${pendingRevokeToken.id}` : false"
+    @close="pendingRevokeToken = undefined"
+    @confirm="revokePendingToken"
+  />
 </template>
