@@ -52,7 +52,7 @@ watch(
     <div class="pointer-events-none fixed inset-x-0 top-4 z-50 flex justify-center px-4 sm:top-6">
       <div
         role="alert"
-        class="alert pointer-events-auto w-full max-w-xl shadow-lg"
+        class="alert pointer-events-auto w-full max-w-xl shadow-lg flex items-center justify-between"
         :class="alertClass"
       >
         <span class="min-w-0 flex-1">{{ message }}</span>
