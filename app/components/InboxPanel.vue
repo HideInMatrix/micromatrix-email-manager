@@ -272,7 +272,7 @@ onBeforeUnmount(() => {
               >
             </th>
             <th>主题</th>
-            <th>发件人</th>
+            <th class="w-px min-w-[16rem] whitespace-nowrap">发件人</th>
             <th class="w-px min-w-[6.25rem] whitespace-nowrap">时间</th>
           </tr>
         </thead>

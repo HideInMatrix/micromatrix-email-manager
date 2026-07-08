@@ -279,7 +279,7 @@ function saveRule() {
 
           <div v-for="rule in group.rules" :key="rule.id" class="join w-full">
             <button
-              class="btn join-item min-h-12 flex-1 justify-start"
+              class="btn join-item flex-1 justify-start"
               type="button"
               @click="emit('toggle', rule)"
             >
@@ -289,7 +289,7 @@ function saveRule() {
                 :checked="rule.enabled"
                 readonly
               >
-              <span class="min-w-0 text-left">
+              <span class="min-w-0 text-left flex items-center gap-2">
                 <strong class="block truncate text-sm">{{ rule.name }}</strong>
                 <small v-if="rule.kind === 'api'" class="block truncate text-xs text-base-content/60">
                   {{ rule.extraction?.fieldName || 'value' }} ← {{ rule.extraction?.source || 'snippet' }}
