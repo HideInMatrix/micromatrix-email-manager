@@ -3,6 +3,7 @@ import { createError, defineEventHandler, readBody } from 'h3'
 import type { AutomationRule } from '../../../shared/types'
 import { requireAdmin } from '../../utils/admin-auth'
 import { assertProviderId } from '../../utils/provider-configs'
+import { normalizeRuleExtraction, normalizeRuleKind } from '../../utils/rules'
 import { addEvent, readState, writeState } from '../../utils/storage'
 
 export default defineEventHandler(async (event) => {
@@ -15,10 +16,13 @@ export default defineEventHandler(async (event) => {
 
   const provider = body.provider || 'gmail'
   assertProviderId(provider)
+  const kind = normalizeRuleKind(body.kind)
+  const extraction = normalizeRuleExtraction(body.extraction, kind)
 
   const now = new Date().toISOString()
   const rule: AutomationRule = {
     id: randomUUID(),
+    kind,
     provider,
     name: body.name.trim(),
     enabled: body.enabled ?? true,
@@ -29,10 +33,11 @@ export default defineEventHandler(async (event) => {
       hasLabel: body.match?.hasLabel?.trim() || undefined
     },
     action: {
-      markRead: Boolean(body.action?.markRead),
-      archive: Boolean(body.action?.archive),
-      addLabel: body.action?.addLabel?.trim() || undefined
+      markRead: kind === 'display' && Boolean(body.action?.markRead),
+      archive: kind === 'display' && Boolean(body.action?.archive),
+      addLabel: kind === 'display' ? body.action?.addLabel?.trim() || undefined : undefined
     },
+    extraction,
     matchCount: 0,
     createdAt: now,
     updatedAt: now

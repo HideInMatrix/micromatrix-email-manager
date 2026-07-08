@@ -2,8 +2,10 @@
 import { ListChecks, Plus, Trash2 } from 'lucide-vue-next'
 import type {
   AutomationRule,
+  AutomationRuleKind,
   MailProviderId,
-  MailProviderSummary
+  MailProviderSummary,
+  RuleTextSource
 } from '../../shared/types'
 
 const props = defineProps<{
@@ -16,9 +18,11 @@ const emit = defineEmits<{
   save: [
     payload: {
       provider: MailProviderId
+      kind: AutomationRuleKind
       name: string
       match: AutomationRule['match']
       action: AutomationRule['action']
+      extraction?: AutomationRule['extraction']
     }
   ]
   toggle: [rule: AutomationRule]
@@ -26,6 +30,7 @@ const emit = defineEmits<{
 }>()
 
 const ruleForm = reactive({
+  kind: 'display' as AutomationRuleKind,
   provider: 'gmail' as MailProviderId,
   name: '',
   from: '',
@@ -34,20 +39,49 @@ const ruleForm = reactive({
   hasLabel: '',
   markRead: true,
   archive: false,
-  addLabel: ''
+  addLabel: '',
+  extractSource: 'snippet' as RuleTextSource,
+  extractPattern: '',
+  extractFlags: '',
+  extractGroupIndex: '1',
+  extractFieldName: 'code'
 })
+
+const sourceOptions: Array<{
+  value: RuleTextSource
+  label: string
+}> = [
+  { value: 'snippet', label: '摘要 snippet' },
+  { value: 'bodyText', label: '正文 text' },
+  { value: 'subject', label: '主题 subject' },
+  { value: 'from', label: '发件人 from' },
+  { value: 'to', label: '收件人 to' },
+  { value: 'all', label: '全部文本' }
+]
+
+const visibleRules = computed(() =>
+  props.rules.filter((rule) => (rule.kind || 'display') === ruleForm.kind)
+)
 
 const groupedRules = computed(() => {
   const providerIds = new Set<MailProviderId>([
     ...props.providers.map((provider) => provider.id),
-    ...props.rules.map((rule) => rule.provider)
+    ...visibleRules.value.map((rule) => rule.provider)
   ])
 
   return Array.from(providerIds).map((providerId) => ({
     providerId,
     providerName: providerName(providerId),
-    rules: props.rules.filter((rule) => rule.provider === providerId)
+    rules: visibleRules.value.filter((rule) => rule.provider === providerId)
   }))
+})
+
+const canSaveRule = computed(() => {
+  if (!ruleForm.name.trim()) {
+    return false
+  }
+
+  return ruleForm.kind === 'display' || Boolean(ruleForm.extractPattern.trim())
 })
 
 watch(
@@ -73,7 +107,14 @@ function providerName(providerId: MailProviderId) {
 }
 
 function saveRule() {
+  if (!canSaveRule.value) {
+    return
+  }
+
+  const kind = ruleForm.kind
+
   emit('save', {
+    kind,
     provider: ruleForm.provider,
     name: ruleForm.name,
     match: {
@@ -83,12 +124,22 @@ function saveRule() {
       hasLabel: ruleForm.hasLabel
     },
     action: {
-      markRead: ruleForm.markRead,
-      archive: ruleForm.archive,
-      addLabel: ruleForm.addLabel
-    }
+      markRead: kind === 'display' && ruleForm.markRead,
+      archive: kind === 'display' && ruleForm.archive,
+      addLabel: kind === 'display' ? ruleForm.addLabel : ''
+    },
+    extraction: kind === 'api'
+      ? {
+          source: ruleForm.extractSource,
+          pattern: ruleForm.extractPattern,
+          flags: ruleForm.extractFlags,
+          groupIndex: Number.parseInt(ruleForm.extractGroupIndex, 10),
+          fieldName: ruleForm.extractFieldName || 'value'
+        }
+      : undefined
   })
   Object.assign(ruleForm, {
+    kind,
     provider: ruleForm.provider,
     name: '',
     from: '',
@@ -97,7 +148,12 @@ function saveRule() {
     hasLabel: '',
     markRead: true,
     archive: false,
-    addLabel: ''
+    addLabel: '',
+    extractSource: 'snippet',
+    extractPattern: '',
+    extractFlags: '',
+    extractGroupIndex: '1',
+    extractFieldName: 'code'
   })
 }
 </script>
@@ -117,11 +173,32 @@ function saveRule() {
           class="btn btn-square btn-sm btn-outline"
           type="button"
           title="保存规则"
-          :disabled="!ruleForm.name"
+          :disabled="!canSaveRule"
           @click="saveRule"
         >
           <span v-if="busy === 'rule-save'" class="loading loading-spinner loading-xs" />
           <Plus v-else :size="17" />
+        </button>
+      </div>
+
+      <div role="tablist" class="tabs tabs-box mx-5">
+        <button
+          class="tab"
+          :class="{ 'tab-active': ruleForm.kind === 'display' }"
+          type="button"
+          role="tab"
+          @click="ruleForm.kind = 'display'"
+        >
+          页面过滤
+        </button>
+        <button
+          class="tab"
+          :class="{ 'tab-active': ruleForm.kind === 'api' }"
+          type="button"
+          role="tab"
+          @click="ruleForm.kind = 'api'"
+        >
+          接口提取
         </button>
       </div>
 
@@ -149,7 +226,7 @@ function saveRule() {
           <InputField v-model="ruleForm.hasLabel" type="text" placeholder="标签包含" />
         </fieldset>
 
-        <fieldset class="fieldset p-0">
+        <fieldset v-if="ruleForm.kind === 'display'" class="fieldset p-0">
           <legend class="fieldset-legend">执行动作</legend>
           <div class="flex flex-wrap gap-4">
             <label class="label cursor-pointer justify-start gap-2 p-0">
@@ -163,9 +240,32 @@ function saveRule() {
           </div>
           <InputField v-model="ruleForm.addLabel" type="text" placeholder="添加本地标签" />
         </fieldset>
+
+        <fieldset v-else class="fieldset p-0">
+          <legend class="fieldset-legend">接口提取</legend>
+          <select v-model="ruleForm.extractSource" class="select select-bordered w-full">
+            <option
+              v-for="source in sourceOptions"
+              :key="source.value"
+              :value="source.value"
+            >
+              {{ source.label }}
+            </option>
+          </select>
+          <InputField
+            v-model="ruleForm.extractPattern"
+            type="text"
+            placeholder="提取正则，例如 \\b(\\d{6})\\b"
+          />
+          <div class="grid gap-3 md:grid-cols-[1fr_7rem_6rem]">
+            <InputField v-model="ruleForm.extractFieldName" type="text" placeholder="返回字段名，例如 code" />
+            <InputField v-model="ruleForm.extractGroupIndex" type="number" min="0" step="1" placeholder="分组" />
+            <InputField v-model="ruleForm.extractFlags" type="text" placeholder="flags" />
+          </div>
+        </fieldset>
       </form>
 
-      <div v-if="rules.length" class="grid gap-3 px-5 pb-5">
+      <div v-if="visibleRules.length" class="grid gap-3 px-5 pb-5">
         <section
           v-for="group in groupedRules"
           v-show="group.rules.length"
@@ -191,7 +291,10 @@ function saveRule() {
               >
               <span class="min-w-0 text-left">
                 <strong class="block truncate text-sm">{{ rule.name }}</strong>
-                <small class="block truncate text-xs text-base-content/60">{{ rule.matchCount }} 次匹配</small>
+                <small v-if="rule.kind === 'api'" class="block truncate text-xs text-base-content/60">
+                  {{ rule.extraction?.fieldName || 'value' }} ← {{ rule.extraction?.source || 'snippet' }}
+                </small>
+                <small v-else class="block truncate text-xs text-base-content/60">{{ rule.matchCount }} 次匹配</small>
               </span>
             </button>
             <button

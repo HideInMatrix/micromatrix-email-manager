@@ -2,6 +2,7 @@ import { createError, defineEventHandler, getRouterParam, readBody } from 'h3'
 import type { AutomationRule } from '../../../shared/types'
 import { requireAdmin } from '../../utils/admin-auth'
 import { assertProviderId } from '../../utils/provider-configs'
+import { normalizeRuleExtraction, normalizeRuleKind } from '../../utils/rules'
 import { addEvent, readState, writeState } from '../../utils/storage'
 
 export default defineEventHandler(async (event) => {
@@ -17,7 +18,9 @@ export default defineEventHandler(async (event) => {
 
   const provider = body.provider || rule.provider
   assertProviderId(provider)
+  const kind = normalizeRuleKind(body.kind || rule.kind)
 
+  rule.kind = kind
   rule.provider = provider
   rule.name = body.name?.trim() || rule.name
   rule.enabled = body.enabled ?? rule.enabled
@@ -28,10 +31,11 @@ export default defineEventHandler(async (event) => {
     hasLabel: body.match?.hasLabel?.trim() || undefined
   }
   rule.action = {
-    markRead: Boolean(body.action?.markRead),
-    archive: Boolean(body.action?.archive),
-    addLabel: body.action?.addLabel?.trim() || undefined
+    markRead: kind === 'display' && Boolean(body.action?.markRead),
+    archive: kind === 'display' && Boolean(body.action?.archive),
+    addLabel: kind === 'display' ? body.action?.addLabel?.trim() || undefined : undefined
   }
+  rule.extraction = normalizeRuleExtraction(body.extraction || rule.extraction, kind)
   rule.updatedAt = new Date().toISOString()
   addEvent(state, {
     type: 'rule',

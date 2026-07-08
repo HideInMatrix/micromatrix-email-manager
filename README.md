@@ -74,14 +74,42 @@ curl "https://your-domain.example/api/messages?limit=50&offset=0" \
 - `recipientEmail`：只获取邮件头 `To` 中包含指定收件邮箱的邮件，也可使用别名 `to`。
 - `q`：按主题、发件人、收件人、摘要搜索。
 - `unread=true`：只获取未读邮件。
-- `matched=true`：只获取命中规则的邮件。
+- `matched=true`：只获取命中“页面过滤”规则的邮件。
+- `ruleId`：按指定“接口提取”规则过滤邮件，并在返回结果的 `extractions` 中返回提取内容。
+- `extract=true`：对返回的邮件应用所有启用的“接口提取”规则，并附加 `extractions`。
 - `limit`：返回数量，范围 `1-500`，默认 `200`。
 - `offset`：分页偏移量，默认 `0`。
+
+接口提取规则在 `/dashboard/rules` 的“接口提取”标签中创建。验证码邮件可以使用类似正则：
+
+```text
+\b(\d{6})\b
+```
+
+将 `source` 设为 `snippet`，`fieldName` 设为 `code`，`groupIndex` 设为 `1` 后，接口会返回：
+
+```json
+{
+  "extractions": [
+    {
+      "fieldName": "code",
+      "value": "382908"
+    }
+  ]
+}
+```
 
 获取单封邮件：
 
 ```bash
 curl "https://your-domain.example/api/messages/<messageId>" \
+  -H "Authorization: Bearer <API_TOKEN>"
+```
+
+按指定提取规则获取单封邮件：
+
+```bash
+curl "https://your-domain.example/api/messages/<messageId>?ruleId=<RULE_ID>" \
   -H "Authorization: Bearer <API_TOKEN>"
 ```
 

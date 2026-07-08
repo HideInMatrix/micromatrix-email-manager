@@ -3,11 +3,14 @@ import type {
   AppEvent,
   AppState,
   AutomationRule,
+  AutomationRuleKind,
   MailAccount,
   MailAttachment,
   MailMessage,
   MailProviderId,
-  PublicMailAccount
+  PublicMailAccount,
+  RuleExtractionConfig,
+  RuleTextSource
 } from '../../shared/types'
 import { applyEventLogSchedule } from './event-logs'
 import { prisma } from './prisma'
@@ -84,21 +87,31 @@ export async function readState(): Promise<AppState> {
       receivedAt: message.receivedAt.toISOString(),
       updatedAt: message.updatedAt.toISOString()
     })),
-    rules: rules.map((rule) => ({
-      id: rule.id,
-      provider: (rule.provider || 'gmail') as MailProviderId,
-      name: rule.name,
-      enabled: rule.enabled,
-      match: parseJson<AutomationRule['match']>(rule.matchJson, {}),
-      action: parseJson<AutomationRule['action']>(rule.actionJson, {
+    rules: rules.map((rule) => {
+      const storedAction = parseJson<StoredRuleAction>(rule.actionJson, {
         markRead: false,
         archive: false
-      }),
-      matchCount: rule.matchCount,
-      lastMatchedAt: toIso(rule.lastMatchedAt),
-      createdAt: rule.createdAt.toISOString(),
-      updatedAt: rule.updatedAt.toISOString()
-    })),
+      })
+
+      return {
+        id: rule.id,
+        kind: normalizeRuleKind(storedAction.kind),
+        provider: (rule.provider || 'gmail') as MailProviderId,
+        name: rule.name,
+        enabled: rule.enabled,
+        match: parseJson<AutomationRule['match']>(rule.matchJson, {}),
+        action: {
+          markRead: Boolean(storedAction.markRead),
+          archive: Boolean(storedAction.archive),
+          addLabel: storedAction.addLabel
+        },
+        extraction: normalizeRuleExtraction(storedAction.extraction),
+        matchCount: rule.matchCount,
+        lastMatchedAt: toIso(rule.lastMatchedAt),
+        createdAt: rule.createdAt.toISOString(),
+        updatedAt: rule.updatedAt.toISOString()
+      }
+    }),
     oauthStates: oauthStates.map((state) => ({
       id: state.id,
       provider: state.provider as MailProviderId,
@@ -198,7 +211,11 @@ export async function writeState(state: AppState) {
           name: rule.name,
           enabled: rule.enabled,
           matchJson: JSON.stringify(rule.match || {}),
-          actionJson: JSON.stringify(rule.action || {}),
+          actionJson: JSON.stringify({
+            ...(rule.action || {}),
+            kind: rule.kind || 'display',
+            extraction: rule.extraction
+          }),
           matchCount: rule.matchCount,
           lastMatchedAt: toDate(rule.lastMatchedAt),
           createdAt: toRequiredDate(rule.createdAt),
@@ -294,6 +311,50 @@ export function addEvent(
     ...input
   })
   state.events = state.events.slice(0, 100)
+}
+
+interface StoredRuleAction extends AutomationRule['action'] {
+  kind?: AutomationRuleKind
+  extraction?: unknown
+}
+
+function normalizeRuleKind(value?: AutomationRuleKind): AutomationRuleKind {
+  return value === 'api' ? 'api' : 'display'
+}
+
+function normalizeRuleExtraction(value: unknown): RuleExtractionConfig | undefined {
+  if (!isPlainObject(value)) {
+    return undefined
+  }
+
+  const pattern = typeof value.pattern === 'string' ? value.pattern : ''
+  const groupIndex =
+    typeof value.groupIndex === 'number' && Number.isInteger(value.groupIndex)
+      ? value.groupIndex
+      : 1
+
+  if (!pattern) {
+    return undefined
+  }
+
+  return {
+    source: normalizeRuleTextSource(value.source),
+    pattern,
+    flags: typeof value.flags === 'string' ? value.flags : undefined,
+    groupIndex,
+    fieldName: typeof value.fieldName === 'string' && value.fieldName
+      ? value.fieldName
+      : 'value'
+  }
+}
+
+function normalizeRuleTextSource(value: unknown): RuleTextSource {
+  const sources: RuleTextSource[] = ['snippet', 'bodyText', 'subject', 'from', 'to', 'all']
+  return sources.includes(value as RuleTextSource) ? value as RuleTextSource : 'snippet'
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 }
 
 function parseJson<T>(value: string, fallback: T): T {

@@ -59,3 +59,11 @@
   - Build result: `rtk pnpm run build` passed.
   - Search result: no `window.confirm` or bare text/email/search/password inputs remain outside the reusable input components and checkbox/drawer controls.
   - _Requirement: R6, R7_
+
+- [x] 9. 拆分自动化规则用途并支持接口提取
+  - 将规则 UI 拆成“页面过滤”和“接口提取”两个 daisyUI tab。
+  - 页面过滤规则继续用于同步后的本地标记、归档和本地标签。
+  - 接口提取规则支持按来源字段执行正则并返回指定字段名和捕获分组内容。
+  - 对外邮件接口支持 `ruleId` 和 `extract=true` 返回 `extractions`。
+  - Build result: `rtk pnpm run build` passed.
+  - _Requirement: R5, R7, R8_

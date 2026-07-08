@@ -124,12 +124,34 @@ export interface MailMessage {
   bodyHtml?: string
   attachments: MailAttachment[]
   ruleMatches: string[]
+  extractions?: MailRuleExtraction[]
   receivedAt: string
   updatedAt: string
 }
 
+export type AutomationRuleKind = 'display' | 'api'
+export type RuleTextSource = 'snippet' | 'bodyText' | 'subject' | 'from' | 'to' | 'all'
+
+export interface RuleExtractionConfig {
+  source: RuleTextSource
+  pattern: string
+  flags?: string
+  groupIndex: number
+  fieldName: string
+}
+
+export interface MailRuleExtraction {
+  ruleId: string
+  ruleName: string
+  fieldName: string
+  value: string
+  source: RuleTextSource
+  groups: string[]
+}
+
 export interface AutomationRule {
   id: string
+  kind: AutomationRuleKind
   provider: MailProviderId
   name: string
   enabled: boolean
@@ -144,6 +166,7 @@ export interface AutomationRule {
     archive: boolean
     addLabel?: string
   }
+  extraction?: RuleExtractionConfig
   matchCount: number
   lastMatchedAt?: string
   createdAt: string

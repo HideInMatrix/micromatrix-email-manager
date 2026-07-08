@@ -186,20 +186,24 @@ export function useMailboxManager() {
   }
 
   async function saveRule(payload: {
+    kind: AutomationRule['kind']
     provider: MailProviderId
     name: string
     match: AutomationRule['match']
     action: AutomationRule['action']
+    extraction?: AutomationRule['extraction']
   }) {
     await withBusy('rule-save', async () => {
       await $fetch('/api/rules', {
         method: 'POST',
         body: {
+          kind: payload.kind,
           provider: payload.provider,
           name: payload.name,
           enabled: true,
           match: payload.match,
-          action: payload.action
+          action: payload.action,
+          extraction: payload.extraction
         }
       })
       notice.value = '规则已保存'
