@@ -146,7 +146,6 @@ function openMessage(messageId: string) {
       :accounts="accounts"
       :status="status"
       :busy="busy"
-      selected-account-email="全部账号"
       @update:selected-message-id="openMessage"
       @trash-selected="confirmTrashMessages"
     />

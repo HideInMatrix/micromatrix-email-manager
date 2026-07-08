@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Inbox, Search, Tag, Trash2 } from 'lucide-vue-next'
+import { Check, ChevronDown, Copy, Inbox, Mail, Search, Tag, Trash2 } from 'lucide-vue-next'
 import type { AppStatus, MailMessage, PublicMailAccount } from '../../shared/types'
 import { formatDate } from '../utils/format'
 
@@ -8,7 +8,6 @@ const props = defineProps<{
   accounts: PublicMailAccount[]
   status?: AppStatus
   selectedMessageId: string
-  selectedAccountEmail?: string
   search: string
   unreadOnly: boolean
   ruleMatchedOnly: boolean
@@ -52,6 +51,8 @@ const ruleMatchedMessageCount = computed(() =>
 )
 
 const selectedMessageKeys = ref<string[]>([])
+const copiedEmail = ref('')
+let copyResetTimer: ReturnType<typeof setTimeout> | undefined
 
 const visibleMessageKeys = computed(() => props.messages.map(messageKey))
 
@@ -106,6 +107,19 @@ function accountName(accountId: string) {
   return props.accounts.find((account) => account.id === accountId)?.email || accountId
 }
 
+async function copyAccountEmail(email: string) {
+  await navigator.clipboard.writeText(email)
+  copiedEmail.value = email
+
+  if (copyResetTimer) {
+    clearTimeout(copyResetTimer)
+  }
+
+  copyResetTimer = setTimeout(() => {
+    copiedEmail.value = ''
+  }, 1800)
+}
+
 function messageKey(message: MailMessage) {
   return `${message.accountId}:${message.id}`
 }
@@ -138,6 +152,12 @@ function trashSelectedMessages() {
 
   emit('trash-selected', selectedMessages.value)
 }
+
+onBeforeUnmount(() => {
+  if (copyResetTimer) {
+    clearTimeout(copyResetTimer)
+  }
+})
 </script>
 
 <template>
@@ -149,7 +169,40 @@ function trashSelectedMessages() {
             <Inbox :size="18" />
             收件箱
           </h2>
-          <p class="mt-1 text-sm text-base-content/60">{{ selectedAccountEmail || '全部账号' }}</p>
+          <div class="dropdown mt-2">
+            <button
+              class="btn btn-outline btn-sm"
+              type="button"
+              tabindex="0"
+              :disabled="!accounts.length"
+            >
+              <Mail :size="15" />
+              邮箱账号
+              <ChevronDown :size="14" />
+            </button>
+            <ul
+              v-if="accounts.length"
+              class="menu dropdown-content z-10 mt-2 w-72 rounded-box bg-base-100 p-2 shadow"
+              tabindex="0"
+            >
+              <li v-for="account in accounts" :key="account.id">
+                <button
+                  class="justify-between gap-3"
+                  type="button"
+                  :title="`复制 ${account.email}`"
+                  @click="copyAccountEmail(account.email)"
+                >
+                  <span class="min-w-0 truncate">{{ account.email }}</span>
+                  <Check
+                    v-if="copiedEmail === account.email"
+                    :size="14"
+                    class="shrink-0 text-success"
+                  />
+                  <Copy v-else :size="14" class="shrink-0 opacity-60" />
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
         <div class="flex flex-wrap items-center justify-end gap-2">
           <button
