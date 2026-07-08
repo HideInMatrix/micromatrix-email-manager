@@ -343,11 +343,11 @@ function capabilityClass(active: boolean) {
           <DaisyTable size="sm" wrapper-class="mt-3 overflow-x-auto">
             <tbody>
               <tr>
-                <td>Client ID</td>
+                <td class="w-px min-w-[16rem] whitespace-nowrap">Client ID</td>
                 <td class="max-w-0 truncate font-mono">{{ config?.clientId || '未填写' }}</td>
               </tr>
               <tr>
-                <td>Client Secret</td>
+                <td class="w-px min-w-[16rem] whitespace-nowrap">Client Secret</td>
                 <td>
                   <div class="flex min-w-0 flex-wrap items-center gap-2">
                     <code
@@ -389,15 +389,15 @@ function capabilityClass(active: boolean) {
                 </td>
               </tr>
               <tr v-if="provider.id === 'gmail'">
-                <td>Pub/Sub Topic</td>
+                <td class="w-px min-w-[16rem] whitespace-nowrap">Pub/Sub Topic</td>
                 <td class="max-w-0 truncate font-mono">{{ config?.pubsubTopic || '未配置' }}</td>
               </tr>
               <tr v-if="provider.id === 'outlook'">
-                <td>Tenant ID</td>
+                <td class="w-px min-w-[16rem] whitespace-nowrap">Tenant ID</td>
                 <td class="max-w-0 truncate font-mono">{{ config?.tenantId || 'common' }}</td>
               </tr>
               <tr>
-                <td>Redirect URI</td>
+                <td class="w-px min-w-[16rem] whitespace-nowrap">Redirect URI</td>
                 <td class="max-w-0 truncate font-mono">{{ provider.redirectUri }}</td>
               </tr>
             </tbody>

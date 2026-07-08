@@ -162,7 +162,7 @@ onBeforeUnmount(() => {
 
 <template>
   <section class="card min-h-[calc(100vh-14rem)] bg-base-200 shadow-sm">
-    <div class="card-body gap-4 p-0">
+    <div class="card-body gap-4">
       <div class="flex flex-wrap items-start justify-between px-5 pt-5">
         <div>
           <h2 class="card-title">
