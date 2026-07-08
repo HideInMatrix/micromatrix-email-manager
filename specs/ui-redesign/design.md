@@ -23,6 +23,8 @@ The daisyUI HTML Dashboard export page establishes these rules:
 
 ## daisyUI Component Contract
 
+All component work must check the daisyUI component catalog first and compose available daisyUI primitives before adding custom local UI.
+
 Before creating or restyling UI, check whether daisyUI already provides the component. Do not build local equivalents of these primitives:
 
 - App shell: use `drawer`, `drawer-toggle`, `drawer-content`, `drawer-side`, `drawer-overlay`, `drawer-button`.

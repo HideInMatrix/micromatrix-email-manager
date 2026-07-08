@@ -164,6 +164,20 @@ export interface AppEvent {
   createdAt: string
 }
 
+export interface EventLogSettings {
+  clearCron: string
+  lastClearedAt?: string
+}
+
+export interface PaginatedEvents {
+  events: AppEvent[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+  settings: EventLogSettings
+}
+
 export interface AppStatus {
   configured: {
     encryption: boolean

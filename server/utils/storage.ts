@@ -9,6 +9,7 @@ import type {
   MailProviderId,
   PublicMailAccount
 } from '../../shared/types'
+import { applyEventLogSchedule } from './event-logs'
 import { prisma } from './prisma'
 
 const defaultState = (): AppState => ({
@@ -120,7 +121,6 @@ export async function writeState(state: AppState) {
   const events = state.events.slice(0, 100)
 
   await prisma.$transaction(async (tx) => {
-    await tx.appEvent.deleteMany()
     await tx.oAuthState.deleteMany()
     await tx.automationRule.deleteMany()
     await tx.mailMessage.deleteMany()
@@ -218,17 +218,28 @@ export async function writeState(state: AppState) {
     }
 
     if (events.length) {
-      await tx.appEvent.createMany({
-        data: events.map((event) => ({
-          id: event.id,
-          type: event.type,
-          message: event.message,
-          accountId: event.accountId || null,
-          createdAt: toRequiredDate(event.createdAt)
-        }))
-      })
+      for (const event of events) {
+        await tx.appEvent.upsert({
+          where: { id: event.id },
+          update: {
+            type: event.type,
+            message: event.message,
+            accountId: event.accountId || null,
+            createdAt: toRequiredDate(event.createdAt)
+          },
+          create: {
+            id: event.id,
+            type: event.type,
+            message: event.message,
+            accountId: event.accountId || null,
+            createdAt: toRequiredDate(event.createdAt)
+          }
+        })
+      }
     }
   })
+
+  await applyEventLogSchedule()
 }
 
 export async function updateState<T>(mutator: (state: AppState) => T | Promise<T>) {
