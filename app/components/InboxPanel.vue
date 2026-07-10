@@ -1,5 +1,16 @@
 <script setup lang="ts">
-import { Check, ChevronDown, Copy, Inbox, Mail, Search, Tag, Trash2 } from 'lucide-vue-next'
+import {
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Inbox,
+  Mail,
+  Search,
+  Tag,
+  Trash2
+} from 'lucide-vue-next'
 import type { AppStatus, MailMessage, PublicMailAccount } from '../../shared/types'
 import { formatDate } from '../utils/format'
 
@@ -7,20 +18,33 @@ const props = defineProps<{
   messages: MailMessage[]
   accounts: PublicMailAccount[]
   status?: AppStatus
+  selectedAccountId: string
   selectedMessageId: string
   search: string
   unreadOnly: boolean
   ruleMatchedOnly: boolean
   busy?: string
+  loading?: boolean
+  page: number
+  pageSize: number
+  total: number
+  totalPages: number
 }>()
 
 const emit = defineEmits<{
+  'update:selectedAccountId': [id: string]
   'update:selectedMessageId': [id: string]
   'update:search': [value: string]
   'update:unreadOnly': [value: boolean]
   'update:ruleMatchedOnly': [value: boolean]
   'trash-selected': [messages: MailMessage[]]
+  'page-change': [page: number]
 }>()
+
+const selectedAccountModel = computed({
+  get: () => props.selectedAccountId,
+  set: (value: string) => emit('update:selectedAccountId', value)
+})
 
 const searchModel = computed({
   get: () => props.search,
@@ -38,7 +62,7 @@ const ruleMatchedModel = computed({
 })
 
 const totalMessageCount = computed(() =>
-  props.status?.counts.messages ?? props.messages.length
+  props.status?.counts.messages ?? props.total
 )
 
 const unreadMessageCount = computed(() =>
@@ -49,6 +73,19 @@ const unreadMessageCount = computed(() =>
 const ruleMatchedMessageCount = computed(() =>
   props.messages.filter((message) => message.ruleMatches.length).length
 )
+
+const safeTotalPages = computed(() => Math.max(1, props.totalPages))
+const rangeStart = computed(() => props.total ? (props.page - 1) * props.pageSize + 1 : 0)
+const rangeEnd = computed(() => Math.min(props.total, props.page * props.pageSize))
+const canGoPrevious = computed(() => props.page > 1 && !props.loading)
+const canGoNext = computed(() => props.page < safeTotalPages.value && !props.loading)
+const visiblePages = computed(() => {
+  const windowSize = Math.min(5, safeTotalPages.value)
+  const maxStart = Math.max(1, safeTotalPages.value - windowSize + 1)
+  const start = Math.min(Math.max(1, props.page - 2), maxStart)
+
+  return Array.from({ length: windowSize }, (_, index) => start + index)
+})
 
 const selectedMessageKeys = ref<string[]>([])
 const copiedEmail = ref('')
@@ -163,13 +200,9 @@ onBeforeUnmount(() => {
 <template>
   <section class="card min-h-[calc(100vh-14rem)] bg-base-200 shadow-sm">
     <div class="card-body gap-4">
-      <div class="flex flex-wrap items-start justify-between px-5 pt-5">
-        <div>
-          <h2 class="card-title">
-            <Inbox :size="18" />
-            收件箱
-          </h2>
-          <div class="dropdown mt-2">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex w-full min-w-0 flex-wrap items-center gap-2 md:w-auto">
+          <div class="dropdown">
             <button
               class="btn btn-outline btn-sm"
               type="button"
@@ -203,8 +236,37 @@ onBeforeUnmount(() => {
               </li>
             </ul>
           </div>
+
+          <div class="join">
+            <button
+              class="btn btn-sm join-item"
+              :class="!unreadOnly ? 'btn-primary' : 'btn-ghost'"
+              type="button"
+              @click="resetStatusFilters"
+            >
+              <Inbox :size="15" />
+              {{ totalMessageCount }}<span class="ml-1 max-sm:hidden">邮件</span>
+            </button>
+            <label
+              class="btn btn-sm join-item"
+              :class="unreadOnly ? 'btn-primary' : 'btn-ghost'"
+            >
+              <input v-model="unreadModel" class="checkbox checkbox-xs" type="checkbox">
+              {{ unreadMessageCount }}<span class="ml-1 max-sm:hidden">未读</span>
+            </label>
+            <button
+              class="btn btn-sm join-item"
+              :class="ruleMatchedOnly ? 'btn-primary' : 'btn-ghost'"
+              type="button"
+              @click="toggleRuleMatchedFilter"
+            >
+              <Tag :size="15" />
+              {{ ruleMatchedMessageCount }}<span class="ml-1 max-sm:hidden">规则</span>
+            </button>
+          </div>
         </div>
-        <div class="flex flex-wrap items-center justify-end gap-2">
+
+        <div class="flex min-w-0 flex-wrap items-center gap-2 md:w-auto md:justify-end">
           <button
             v-if="selectedCount"
             class="btn btn-sm btn-error max-sm:btn-square"
@@ -218,43 +280,36 @@ onBeforeUnmount(() => {
             <span class="max-sm:hidden">删除 {{ selectedCount }}</span>
           </button>
 
-          <div class="join">
-            <button
-              class="btn btn-sm join-item"
-              :class="!unreadOnly ? 'btn-primary' : 'btn-ghost'"
-              type="button"
-              @click="resetStatusFilters"
-            >
-              <Inbox :size="15" />
-              {{ totalMessageCount }} 邮件
-            </button>
+          <div class="join join-vertical sm:join-horizontal">
             <label
-              class="btn btn-sm join-item"
-              :class="unreadOnly ? 'btn-primary' : 'btn-ghost'"
+              class="select select-sm join-item flex h-9 min-h-9 items-center gap-2"
+              title="按邮箱账号筛选"
             >
-              <input v-model="unreadModel" class="checkbox checkbox-xs" type="checkbox">
-              {{ unreadMessageCount }} 未读
+              <Mail
+                :size="15"
+                class="pointer-events-none relative z-10 shrink-0 text-base-content/50"
+              />
+              <select v-model="selectedAccountModel" class="relative z-0 min-w-0 grow">
+                <option value="">全部邮箱</option>
+                <option v-for="account in accounts" :key="account.id" :value="account.id">
+                  {{ account.email }}
+                </option>
+              </select>
             </label>
-            <button
-              class="btn btn-sm join-item btn-ghost"
-              type="button"
-            >
-              <Tag :size="15" />
-              {{ ruleMatchedMessageCount }} 规则
-            </button>
-          </div>
 
-          <InputField
-            v-model="searchModel"
-            type="search"
-            input-size="sm"
-            field-class="min-w-[14.5rem]"
-            placeholder="搜索邮件"
-          >
-            <template #prefix>
-              <Search :size="15" />
-            </template>
-          </InputField>
+            <InputField
+              v-model="searchModel"
+              :full-width="false"
+              type="search"
+              input-size="sm"
+              field-class="join-item h-9 min-h-9"
+              placeholder="搜索邮件"
+            >
+              <template #prefix>
+                <Search :size="15" />
+              </template>
+            </InputField>
+          </div>
         </div>
       </div>
 
@@ -322,6 +377,49 @@ onBeforeUnmount(() => {
       <div v-if="!messages.length" class="flex min-h-72 items-center justify-center gap-2 p-6 text-base-content/60">
         <Inbox :size="24" />
         <span>暂无邮件</span>
+      </div>
+
+      <div
+        v-if="total > 0"
+        class="flex flex-col gap-3 px-5 pb-5 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <p class="text-sm text-base-content/60">
+          共 {{ total }} 封，当前显示 {{ rangeStart }}-{{ rangeEnd }}
+        </p>
+        <div class="join" aria-label="邮件分页">
+          <button
+            class="btn btn-sm join-item"
+            type="button"
+            title="上一页"
+            :disabled="!canGoPrevious"
+            @click="emit('page-change', page - 1)"
+          >
+            <ChevronLeft :size="16" />
+          </button>
+          <button
+            v-for="pageNumber in visiblePages"
+            :key="pageNumber"
+            class="btn btn-sm join-item"
+            :class="pageNumber === page ? 'btn-active btn-primary' : ''"
+            type="button"
+            :aria-label="`第 ${pageNumber} 页`"
+            :aria-current="pageNumber === page ? 'page' : undefined"
+            :disabled="loading"
+            @click="emit('page-change', pageNumber)"
+          >
+            {{ pageNumber }}
+          </button>
+          <button
+            class="btn btn-sm join-item"
+            type="button"
+            title="下一页"
+            :disabled="!canGoNext"
+            @click="emit('page-change', page + 1)"
+          >
+            <span v-if="loading" class="loading loading-spinner loading-xs" />
+            <ChevronRight v-else :size="16" />
+          </button>
+        </div>
       </div>
     </div>
   </section>

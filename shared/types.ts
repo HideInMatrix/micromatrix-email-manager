@@ -129,6 +129,14 @@ export interface MailMessage {
   updatedAt: string
 }
 
+export interface PaginatedMessages {
+  messages: MailMessage[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
 export type AutomationRuleKind = 'display' | 'api'
 export type RuleTextSource = 'snippet' | 'bodyText' | 'subject' | 'from' | 'to' | 'all'
 

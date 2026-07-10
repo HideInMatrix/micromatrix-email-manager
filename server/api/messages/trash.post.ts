@@ -29,6 +29,7 @@ export default defineEventHandler(async (event) => {
     account: MailAccount
     message: MailMessage
     provider: MailProvider
+    trashMessage: NonNullable<MailProvider['trashMessage']>
   }> = []
 
   for (const request of requests) {
@@ -57,8 +58,9 @@ export default defineEventHandler(async (event) => {
     assertCanAccessAccount(access, account)
 
     const provider = getProviderForAccount(account.provider)
+    const trashMessage = provider.trashMessage
 
-    if (!provider.trashMessage) {
+    if (!trashMessage) {
       throw createError({
         statusCode: 400,
         statusMessage: `${provider.name} trash is not implemented`
@@ -66,14 +68,14 @@ export default defineEventHandler(async (event) => {
     }
 
     seenKeys.add(key)
-    targets.push({ account, message, provider })
+    targets.push({ account, message, provider, trashMessage })
   }
 
   const trashedKeys = new Set<string>()
 
   try {
-    for (const { account, message, provider } of targets) {
-      await provider.trashMessage(event, account, message)
+    for (const { account, message, provider, trashMessage } of targets) {
+      await trashMessage(event, account, message)
       trashedKeys.add(`${message.accountId}:${message.id}`)
       addEvent(state, {
         type: 'message',

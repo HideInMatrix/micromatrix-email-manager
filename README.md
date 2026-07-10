@@ -79,6 +79,9 @@ curl "https://your-domain.example/api/messages?limit=50&offset=0" \
 - `extract=true`：对返回的邮件应用所有启用的“接口提取”规则，并附加 `extractions`。
 - `limit`：返回数量，范围 `1-500`，默认 `200`。
 - `offset`：分页偏移量，默认 `0`。
+- `page` / `pageSize`：按页返回邮件；使用任一参数时，响应为包含 `messages`、`total`、`page`、`pageSize` 和 `totalPages` 的分页对象。`pageSize` 范围为 `1-100`，默认 `25`。
+
+不传 `page` 和 `pageSize` 时，接口继续返回邮件数组，现有 `limit` / `offset` 调用方式不受影响。
 
 接口提取规则在 `/dashboard/rules` 的“接口提取”标签中创建。验证码邮件可以使用类似正则：
 

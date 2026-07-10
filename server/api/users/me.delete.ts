@@ -30,7 +30,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const normalizedEmail = normalizeEmail(session.email)
+  const sessionEmail = session.email
+  const normalizedEmail = normalizeEmail(sessionEmail)
 
   const result = await prisma.$transaction(async (tx) => {
     const [accounts, users] = await Promise.all([
@@ -57,7 +58,7 @@ export default defineEventHandler(async (event) => {
 
     const userEmails = Array.from(
       new Set([
-        session.email,
+        sessionEmail,
         ...users
           .filter((user) => normalizeEmail(user.email) === normalizedEmail)
           .map((user) => user.email)

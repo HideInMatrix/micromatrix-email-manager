@@ -4,6 +4,7 @@ import type {
   CreatedApiToken,
   MailMessage,
   MailProviderId,
+  PaginatedMessages,
   PublicApiToken,
   PublicAppUser,
   PublicMailProviderConfig,
@@ -29,6 +30,11 @@ export function useMailboxManager() {
   const createdApiToken = ref<CreatedApiToken>()
   const selectedAccountId = ref('')
   const selectedMessageId = ref('')
+  const messagePage = ref(1)
+  const messagePageSize = ref(25)
+  const messageTotal = ref(0)
+  const messageTotalPages = ref(1)
+  const messagesLoading = ref(false)
   const search = ref('')
   const unreadOnly = ref(false)
   const ruleMatchedOnly = ref(false)
@@ -36,6 +42,7 @@ export function useMailboxManager() {
   const error = ref('')
   const notice = ref('')
   const markingReadKeys = new Set<string>()
+  let messageRequestId = 0
 
   const selectedMessage = computed(() =>
     messages.value.find((message) => message.id === selectedMessageId.value)
@@ -79,26 +86,53 @@ export function useMailboxManager() {
     }
   }
 
-  async function loadMessages() {
-    messages.value = await $fetch<MailMessage[]>('/api/messages', {
-      query: {
-        accountId: selectedAccountId.value || undefined,
-        q: search.value || undefined,
-        unread: unreadOnly.value || undefined,
-        matched: ruleMatchedOnly.value || undefined
+  async function loadMessages(page = messagePage.value) {
+    const requestId = ++messageRequestId
+    messagesLoading.value = true
+
+    try {
+      const result = await $fetch<PaginatedMessages>('/api/messages', {
+        query: {
+          accountId: selectedAccountId.value || undefined,
+          q: search.value || undefined,
+          unread: unreadOnly.value || undefined,
+          matched: ruleMatchedOnly.value || undefined,
+          page,
+          pageSize: messagePageSize.value
+        }
+      })
+
+      if (requestId !== messageRequestId) {
+        return
       }
-    })
-    const firstMessage = messages.value[0]
 
-    if (!selectedMessageId.value && firstMessage) {
-      selectedMessageId.value = firstMessage.id
-    }
+      messages.value = result.messages
+      messagePage.value = result.page
+      messagePageSize.value = result.pageSize
+      messageTotal.value = result.total
+      messageTotalPages.value = result.totalPages
 
-    if (
-      selectedMessageId.value &&
-      !messages.value.some((message) => message.id === selectedMessageId.value)
-    ) {
-      selectedMessageId.value = messages.value[0]?.id || ''
+      const firstMessage = messages.value[0]
+
+      if (!selectedMessageId.value && firstMessage) {
+        selectedMessageId.value = firstMessage.id
+      }
+
+      if (
+        selectedMessageId.value &&
+        !messages.value.some((message) => message.id === selectedMessageId.value)
+      ) {
+        selectedMessageId.value = messages.value[0]?.id || ''
+      }
+    } catch (caught) {
+      if (requestId === messageRequestId) {
+        error.value =
+          caught instanceof Error ? caught.message : '加载邮件失败，请检查服务端日志'
+      }
+    } finally {
+      if (requestId === messageRequestId) {
+        messagesLoading.value = false
+      }
     }
   }
 
@@ -382,6 +416,11 @@ export function useMailboxManager() {
     selectedAccount,
     selectedMessageId,
     selectedMessage,
+    messagePage,
+    messagePageSize,
+    messageTotal,
+    messageTotalPages,
+    messagesLoading,
     search,
     unreadOnly,
     ruleMatchedOnly,

@@ -313,7 +313,7 @@ export function addEvent(
   state.events = state.events.slice(0, 100)
 }
 
-interface StoredRuleAction extends AutomationRule['action'] {
+type StoredRuleAction = AutomationRule['action'] & {
   kind?: AutomationRuleKind
   extraction?: unknown
 }

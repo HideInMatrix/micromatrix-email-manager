@@ -13,12 +13,14 @@ const props = withDefaults(defineProps<{
   autocomplete?: string
   disabled?: boolean
   readonly?: boolean
+  fullWidth?: boolean
   inputSize?: 'xs' | 'sm' | 'md' | 'lg'
   fieldClass?: string
 }>(), {
   type: 'text',
   placeholder: '',
   autocomplete: undefined,
+  fullWidth: true,
   inputSize: 'md',
   fieldClass: ''
 })
@@ -35,8 +37,8 @@ const inputSizeClass = computed(() =>
       <slot name="legend" />
     </legend>
     <label
-      class="input input-bordered w-full"
-      :class="[inputSizeClass, fieldClass]"
+      class="input input-bordered"
+      :class="[fullWidth ? 'w-full' : '', inputSizeClass, fieldClass]"
     >
       <slot name="prefix" />
       <input
@@ -55,8 +57,8 @@ const inputSizeClass = computed(() =>
 
   <label
     v-else
-    class="input input-bordered w-full"
-    :class="[inputSizeClass, fieldClass]"
+    class="input input-bordered"
+    :class="[fullWidth ? 'w-full' : '', inputSizeClass, fieldClass]"
   >
     <slot name="prefix" />
     <input

@@ -212,8 +212,8 @@ function normalizeRuleTextSource(value?: RuleTextSource): RuleTextSource {
   return sources.includes(value as RuleTextSource) ? value as RuleTextSource : 'snippet'
 }
 
-function normalizeGroupIndex(value?: number) {
-  if (!Number.isInteger(value) || value < 0 || value > 20) {
+function normalizeGroupIndex(value?: number): number {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > 20) {
     return 1
   }
 

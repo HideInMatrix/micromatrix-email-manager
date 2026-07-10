@@ -67,3 +67,11 @@
   - 对外邮件接口支持 `ruleId` 和 `extract=true` 返回 `extractions`。
   - Build result: `rtk pnpm run build` passed.
   - _Requirement: R5, R7, R8_
+
+- [x] 10. 增加邮件工作台分页和邮箱筛选
+  - 邮件列表接口在传入 `page` / `pageSize` 时返回分页元数据，并保留原有 `limit` / `offset` 数组响应兼容性。
+  - 首页每页加载 25 封邮件，使用 daisyUI `join` 按钮展示数字页码、上一页和下一页。
+  - 增加“全部邮箱/指定邮箱”筛选，选项来源于当前用户可访问的邮箱账号接口。
+  - 搜索、未读、规则或邮箱筛选变化时自动回到第一页，并避免快速请求覆盖最新结果。
+  - Build result: `rtk pnpm run build` passed.
+  - _Requirement: R6, R7, R9_

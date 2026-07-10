@@ -17,6 +17,11 @@ const {
   selectedAccountId,
   selectedMessageId,
   selectedMessage,
+  messagePage,
+  messagePageSize,
+  messageTotal,
+  messageTotalPages,
+  messagesLoading,
   search,
   unreadOnly,
   ruleMatchedOnly,
@@ -56,13 +61,14 @@ async function refreshWorkspace() {
     isAdmin: boolean
   }>('/api/admin/session')
   selectedAccountId.value = ''
+  messagePage.value = 1
   await refreshAll({ selectFirstAccount: false })
 }
 
 onMounted(refreshWorkspace)
 
-watch([search, unreadOnly, ruleMatchedOnly], async () => {
-  await loadMessages()
+watch([selectedAccountId, search, unreadOnly, ruleMatchedOnly], async () => {
+  await loadMessages(1)
 })
 
 async function confirmTrashMessage(message: MailMessage) {
@@ -139,6 +145,7 @@ function openMessage(messageId: string) {
   <BitsRevealPanel as="main" class="flex-1 grid min-w-0 gap-4 xl:grid-cols-[minmax(520px,1fr)_minmax(340px,0.72fr)]">
     <InboxPanel
       :selected-message-id="selectedMessageId"
+      v-model:selected-account-id="selectedAccountId"
       v-model:search="search"
       v-model:unread-only="unreadOnly"
       v-model:rule-matched-only="ruleMatchedOnly"
@@ -146,7 +153,13 @@ function openMessage(messageId: string) {
       :accounts="accounts"
       :status="status"
       :busy="busy"
+      :loading="messagesLoading"
+      :page="messagePage"
+      :page-size="messagePageSize"
+      :total="messageTotal"
+      :total-pages="messageTotalPages"
       @update:selected-message-id="openMessage"
+      @page-change="loadMessages"
       @trash-selected="confirmTrashMessages"
     />
 

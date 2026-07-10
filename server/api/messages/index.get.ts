@@ -1,5 +1,9 @@
 import { createError, defineEventHandler, getQuery } from 'h3'
-import type { AutomationRule, MailMessage } from '../../../shared/types'
+import type {
+  AutomationRule,
+  MailMessage,
+  PaginatedMessages
+} from '../../../shared/types'
 import { filterMessagesForUser, getOptionalUserAccess } from '../../utils/access'
 import { extractByRules } from '../../utils/rules'
 import { readState } from '../../utils/storage'
@@ -15,12 +19,20 @@ export default defineEventHandler(async (event) => {
   const matchedOnly = query.matched === 'true'
   const extractionRuleId = typeof query.ruleId === 'string' ? query.ruleId.trim() : ''
   const includeExtractions = query.extract === 'true' || Boolean(extractionRuleId)
+  const paginated = typeof query.page === 'string' || typeof query.pageSize === 'string'
+  const requestedPage = clampQueryNumber(
+    query.page,
+    1,
+    Number.MAX_SAFE_INTEGER,
+    1
+  )
+  const pageSize = clampQueryNumber(query.pageSize, 1, 100, 25)
   const limit = clampQueryNumber(query.limit, 1, 500, 200)
   const offset = clampQueryNumber(query.offset, 0, Number.MAX_SAFE_INTEGER, 0)
   const state = await readState()
 
   if (!access) {
-    return []
+    return paginated ? paginateMessages([], requestedPage, pageSize) : []
   }
 
   const extractionRules = state.rules.filter((rule) => rule.kind === 'api')
@@ -53,15 +65,39 @@ export default defineEventHandler(async (event) => {
         .includes(search)
     })
 
-  return messages
+  const result = messages
     .map((message) =>
       includeExtractions
         ? withExtractions(message, extractionRules, extractionRuleId)
         : message
     )
     .filter((message) => !extractionRuleId || Boolean(message.extractions?.length))
-    .slice(offset, offset + limit)
+
+  if (paginated) {
+    return paginateMessages(result, requestedPage, pageSize)
+  }
+
+  return result.slice(offset, offset + limit)
 })
+
+function paginateMessages(
+  messages: MailMessage[],
+  requestedPage: number,
+  pageSize: number
+): PaginatedMessages {
+  const total = messages.length
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const page = Math.min(requestedPage, totalPages)
+  const offset = (page - 1) * pageSize
+
+  return {
+    messages: messages.slice(offset, offset + pageSize),
+    total,
+    page,
+    pageSize,
+    totalPages
+  }
+}
 
 function withExtractions(
   message: MailMessage,
