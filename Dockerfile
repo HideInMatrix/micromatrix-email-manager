@@ -16,7 +16,9 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY prisma.config.ts ./
 COPY prisma ./prisma
+COPY scripts ./scripts
 
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
   CI=true pnpm install --frozen-lockfile --ignore-scripts
