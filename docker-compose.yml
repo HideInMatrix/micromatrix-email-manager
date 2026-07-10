@@ -10,7 +10,8 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: ${DOCKER_DATABASE_URL:-file:/data/micromatrix-email-manager.sqlite}
+      DATABASE_PROVIDER: ${DATABASE_PROVIDER:-sqlite}
+      DATABASE_URL: ${DATABASE_URL:-file:/data/micromatrix-email-manager.sqlite}
     volumes:
       - ./.data:/data
     networks:

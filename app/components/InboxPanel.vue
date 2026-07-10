@@ -282,14 +282,17 @@ onBeforeUnmount(() => {
 
           <div class="join join-vertical sm:join-horizontal">
             <label
-              class="select select-sm join-item flex h-9 min-h-9 items-center gap-2"
+              class="select select-sm join-item flex h-9 min-h-9 items-center gap-2 w-40"
               title="按邮箱账号筛选"
             >
               <Mail
                 :size="15"
                 class="pointer-events-none relative z-10 shrink-0 text-base-content/50"
               />
-              <select v-model="selectedAccountModel" class="relative z-0 min-w-0 grow">
+              <select
+                v-model="selectedAccountModel"
+                class="relative z-0 min-w-0 flex-1 truncate"
+              >
                 <option value="">全部邮箱</option>
                 <option v-for="account in accounts" :key="account.id" :value="account.id">
                   {{ account.email }}
@@ -302,7 +305,7 @@ onBeforeUnmount(() => {
               :full-width="false"
               type="search"
               input-size="sm"
-              field-class="join-item h-9 min-h-9"
+              field-class="join-item h-9 min-h-9 w-40"
               placeholder="搜索邮件"
             >
               <template #prefix>

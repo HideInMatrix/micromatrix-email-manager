@@ -2,6 +2,8 @@ node_modules
 .nuxt
 .output
 .data
+prisma/generated
+server/generated/prisma
 .env
 .env.*
 !.env.example

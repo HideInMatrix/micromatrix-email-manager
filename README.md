@@ -1,6 +1,6 @@
 # micromatrix-email-manager
 
-Nuxt 4 邮箱账号管理后台，使用 Prisma ORM 和 SQLite 存储账号、邮件状态、规则、运行事件与 OAuth 配置。
+Nuxt 4 邮箱账号管理后台，使用 Prisma ORM 和 SQLite / PostgreSQL 存储账号、邮件状态、规则、运行事件与 OAuth 配置。
 
 ## 功能概览
 
@@ -20,13 +20,15 @@ pnpm db:push
 pnpm dev
 ```
 
-默认本地数据库路径是 `.data/micromatrix-email-manager.sqlite`。本地开发时通常不需要在 `.env` 中设置 `DATABASE_URL`，让项目使用默认路径即可。
+默认数据库类型是 SQLite，本地数据库路径是 `.data/micromatrix-email-manager.sqlite`。本地开发时通常不需要在 `.env` 中设置 `DATABASE_PROVIDER` 和 `DATABASE_URL`，让项目使用默认配置即可。
 
 ## 环境变量
 
 `.env` 只放部署级配置。Nuxt 运行时配置请使用 `NUXT_` 前缀：
 
 ```bash
+DATABASE_PROVIDER=sqlite
+# DATABASE_URL=file:./.data/micromatrix-email-manager.sqlite
 NUXT_SITE_URL=http://127.0.0.1:3000
 NUXT_ADMIN_EMAIL=admin@example.com
 NUXT_ADMIN_PASSWORD=replace-with-a-strong-admin-password
@@ -37,12 +39,42 @@ NUXT_TOKEN_ENCRYPTION_KEY=replace-with-at-least-32-random-characters
 生产环境示例：
 
 ```bash
+DATABASE_PROVIDER=postgresql
+DATABASE_URL=postgresql://user:password@host:5432/database?sslmode=require
 NUXT_SITE_URL=https://sms.matrixfrp.gq
 NUXT_ADMIN_EMAIL=your-admin@example.com
 NUXT_ADMIN_PASSWORD=replace-with-a-strong-admin-password
 NUXT_USER_CREDENTIALS=user1@example.com:user-password,user2@example.com:user-password
 NUXT_TOKEN_ENCRYPTION_KEY=replace-with-at-least-32-random-characters
 ```
+
+数据库由两个环境变量控制：
+
+- `DATABASE_PROVIDER`：数据库类型，只支持 `sqlite` 或 `postgresql`，未设置时默认为 `sqlite`。
+- `DATABASE_URL`：数据库连接地址。SQLite 使用 `file:` 地址；PostgreSQL 使用 `postgresql://` 或 `postgres://` 地址。
+
+SQLite 示例：
+
+```bash
+DATABASE_PROVIDER=sqlite
+DATABASE_URL=file:./.data/micromatrix-email-manager.sqlite
+```
+
+PostgreSQL / Neon 示例：
+
+```bash
+DATABASE_PROVIDER=postgresql
+DATABASE_URL=postgresql://user:password@host/database?sslmode=require
+```
+
+修改数据库类型后，需要重新生成 Prisma Client 并将表结构同步到目标数据库：
+
+```bash
+pnpm db:generate
+pnpm db:push
+```
+
+`pnpm db:generate` 会同时生成 SQLite 和 PostgreSQL 客户端；`pnpm db:push` 只会操作 `DATABASE_PROVIDER` 当前指定的数据库。数据库类型是部署级配置，不能在后台页面中切换，SQLite 与 PostgreSQL 之间的数据也不会自动迁移。
 
 `NUXT_TOKEN_ENCRYPTION_KEY` 建议使用 32 位以上随机字符串。修改后，已保存的 OAuth Token 可能无法解密，所以生产环境上线后不要随意更换。
 
@@ -132,15 +164,14 @@ cp .env.example .env
 docker compose up --build -d
 ```
 
-`docker-compose.yml` 默认将应用映射到 `APP_PORT`，未设置时使用 `3000`。SQLite 数据库会保存在项目目录的 `.data/micromatrix-email-manager.sqlite`，容器启动前会执行 `prisma db push`，新目录会自动初始化数据库表。
+`docker-compose.yml` 默认将应用映射到 `APP_PORT`，未设置时使用 `3000`。默认使用 SQLite，数据库会保存在项目目录的 `.data/micromatrix-email-manager.sqlite`。容器启动前会执行 `pnpm db:push`，新数据库会自动初始化数据表。
 
 1Panel / Docker 部署时注意：
 
-- `.env` 中使用 `NUXT_SITE_URL`、`NUXT_ADMIN_EMAIL`、`NUXT_ADMIN_PASSWORD`、`NUXT_USER_CREDENTIALS`、`NUXT_TOKEN_ENCRYPTION_KEY`。
-- 不要用本地的 `DATABASE_URL=file:./.data/...` 覆盖容器数据库路径。
-- `docker-compose.yml` 已强制容器内数据库为 `file:/data/micromatrix-email-manager.sqlite`。
+- `.env` 中使用 `DATABASE_PROVIDER`、`DATABASE_URL` 和各项 `NUXT_` 配置。
+- 使用默认 SQLite 时可以不设置 `DATABASE_URL`，容器会使用 `file:/data/micromatrix-email-manager.sqlite`。
+- 使用 PostgreSQL 时设置 `DATABASE_PROVIDER=postgresql`，并把 `DATABASE_URL` 设置为完整 PostgreSQL 连接地址。
 - 容器内 `/data` 会直接映射到宿主机项目目录的 `.data`。
-- 如确实需要覆盖容器数据库路径，请设置 `DOCKER_DATABASE_URL`，不要设置 `DATABASE_URL`。
 - 使用 Nginx 反向代理时，公网访问地址必须和 `NUXT_SITE_URL` 完全一致，例如 `https://sms.matrixfrp.gq`。
 
 使用已发布镜像：
@@ -148,6 +179,17 @@ docker compose up --build -d
 ```bash
 MICROMATRIX_EMAIL_MANAGER_IMAGE=ghcr.io/OWNER/REPO:latest docker compose up -d
 ```
+
+## Vercel 与 PostgreSQL
+
+Vercel 不适合持久化本地 SQLite 文件。部署到 Vercel 时应创建 Neon、Supabase 或其他托管 PostgreSQL 数据库，并配置：
+
+```bash
+DATABASE_PROVIDER=postgresql
+DATABASE_URL=postgresql://user:password@host/database?sslmode=require
+```
+
+首次部署前，使用同一组环境变量运行 `pnpm db:push` 初始化数据库。随后在 Vercel 中配置其他 `NUXT_` 环境变量，并把 `NUXT_SITE_URL` 设置为正式访问域名。
 
 ## Google Cloud、Gmail OAuth 与 Pub/Sub 配置
 
